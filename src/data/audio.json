@@ -588,5 +588,20 @@
 "p:yuan": "8a8432d520.mp3",
 "p:yin": "c36ab46e32.mp3",
 "p:yun": "4a8bc85e56.mp3",
-"p:ying": "48020020df.mp3"
+"p:ying": "48020020df.mp3",
+"v:map": "8c464bd677.mp3",
+"v:chest": "7033a1687f.mp3",
+"v:elite": "c3efe5e622.mp3",
+"v:spell": "f0ec63ccfa.mp3",
+"v:tone": "1d00f2b0b9.mp3",
+"v:neutral": "e5e4bf1020.mp3",
+"v:again": "6960d61f1b.mp3",
+"v:teach": "e235eb4242.mp3",
+"v:shield": "1d306a176b.mp3",
+"v:streak": "e937b116af.mp3",
+"v:statue": "779e4900a7.mp3",
+"v:pairs": "ea02eae55d.mp3",
+"v:camp": "814a2c5d3d.mp3",
+"v:win": "3b56e10f30.mp3",
+"v:lose": "9cc25fd532.mp3"
 }

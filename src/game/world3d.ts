@@ -79,7 +79,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
     groundPlane(g, 0xb3c1b0);
     patch(g, 0x8fa595, HERO_X, 0.3, 2.6, 2.2); patch(g, 0x8fa595, FOE_X, 0.4, 2.8, 2.4);
     mountains(g, { near: 0x58766a, far: 0xc4cfc0 });
-    disc(g, 0xc0533c, 14, 16, -85, 4.4);
+    disc(g, 0xc0533c, 22, 9, -85, 4.4);
     mist(g, ctx, [[-14, 3, -22, 34], [10, 2.2, -18, 30], [0, 5, -36, 50], [-20, 4, -44, 50], [18, 6, -50, 50]]);
     const mound = M(new THREE.SphereGeometry(4, 24, 12), toon(0x8ea393), -11, 0, -20, g); mound.scale.set(1.6, 0.5, 1.2);
     const pag = new THREE.Group(); pag.position.set(-11, 1.7, -20); g.add(pag);
@@ -158,7 +158,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
     outline(M(new THREE.ConeGeometry(3.0, 1.5, 6), toon(0x34332f), 0, 3.6, 0, pav), 1.03);
     M(new THREE.SphereGeometry(0.18, 8, 6), toon(0x34332f), 0, 4.45, 0, pav);
     mountains(g, { near: 0x8fae9a, far: 0xd2dccd, count: 16, z0: 30 });
-    disc(g, 0xd8743f, -15, 13, -85, 3.8, 0.8);
+    disc(g, 0xd8743f, -24, 8, -85, 3.8, 0.8);
     mist(g, ctx, [[-12, 2, -20, 34], [12, 2.6, -26, 36], [0, 5, -40, 60]]);
   } },
   xueshan: { name: "雪山古寺", sky: 0xe6eaec, fog: [20, 76], light: [0.95, 0.7], build(g, ctx) {
@@ -434,14 +434,14 @@ export class World {
     this.drops.forEach(d => { d.m.visible = true; d.m.scale.set(1, 1, 1); d.m.position.set(at.x - 0.3, at.y + 0.2, at.z); d.v.set((-1.5 + rnd() * 4) * power, (1 + rnd() * 3.5) * power, (rnd() - 0.5) * 3 * power); });
   }
 
-  /** 怪物扑到主角面前咬一口，再退回去 */
-  lunge(onBite: () => void) {
+  /** 怪物扑到主角面前咬一口，再退回去。onBite 返回 false 表示被竹盾挡住，主角不闪红 */
+  lunge(onBite: () => boolean) {
     const from = this.foeX;
     this.anim(700, k => {
       const p = k < 0.45 ? k / 0.45 : 1 - (k - 0.45) / 0.55;
       this.foeX = from + (HERO_X + 2.2 - from) * Math.sin(p * Math.PI / 2);
     }, () => { this.foeX = from; });
-    setTimeout(() => { this.heroFlash = 1; onBite(); }, 320);
+    setTimeout(() => { if (onBite()) this.heroFlash = 1; }, 320);
   }
 
   /** 怪物被打散 */

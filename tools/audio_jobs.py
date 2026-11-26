@@ -72,6 +72,18 @@ for syl, (how, v) in sorted(syl_src.items()):
 for part, (target, cands) in PARTS.items():
     jobs.append({"key": "p:" + part, "mode": "carrier", "cands": list(cands), "expect": [target], "toneless": True})
 
+# 界面语音：不识字的孩子靠听懂每一步要做什么
+VOICE_LINES = {
+    "map": "选下一站", "chest": "挑一个宝贝", "elite": "打赢大怪啦，挑一个宝贝",
+    "spell": "把卡片放进格子里", "tone": "听一听，划出声调", "neutral": "这是轻声，点一下就行",
+    "again": "再划大一点", "teach": "看我怎么拼", "shield": "竹盾挡住啦", "streak": "连对啦，送你一个道具",
+    "statue": "石像说话啦，点对的拼音", "pairs": "左边点一个，右边点一个", "camp": "歇一歇，还是练一练",
+    "win": "闯关成功，声音都救回来啦", "lose": "这一局到这里，星星都带回家了",
+}
+for name, text in VOICE_LINES.items():
+    # 提示语不考读音，听写和原句大致一样就行（“啦”常被听成“了”）
+    jobs.append({"key": "v:" + name, "mode": "plain", "cands": [text], "expect": None, "similar": text})
+
 for j in jobs:
     j["file"] = fname(j.get("alias") or j["key"])
 
