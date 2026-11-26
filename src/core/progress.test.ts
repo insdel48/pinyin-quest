@@ -20,7 +20,7 @@ describe("长期档案", () => {
   it("保存并载入档案，坏数据返回新档案", () => {
     const profile = newProfile();
     expect(profile).toMatchObject({ level: 1, stars: 0, meta: {
-      extraHeart: false, extraSlot: false, robe: "zhuqing", robesOwned: ["zhuqing"],
+      extraHeart: false, extraSlot: false, outfit: "tee", outfitsOwned: ["tee"],
     } });
     recordAnswer(profile, "a", "correct", 1);
     expect(loadProfile(saveProfile(profile))).toEqual(profile);
@@ -67,14 +67,14 @@ describe("长期档案", () => {
     expect([starsFor("correct", []), starsFor("assisted", []), starsFor("wrong", [])]).toEqual([1, 0, 0]);
     expect([starsFor("correct", ["gold"]), starsFor("assisted", ["gold"]), starsFor("wrong", ["gold"])]).toEqual([2, 1, 0]);
     const p = newProfile();
-    expect(buy(p, "robe-yuebai")).toBe(false);
+    expect(buy(p, "outfit-jacket")).toBe(false);
     p.stars = 170;
     for (const { id } of SHOP) {
       expect(buy(p, id)).toBe(true);
       expect(buy(p, id)).toBe(false);
     }
     expect(p.stars).toBe(0);
-    expect(p.meta).toMatchObject({ robesOwned: ["zhuqing", "yuebai"], extraHeart: true, extraSlot: true });
+    expect(p.meta).toMatchObject({ outfitsOwned: ["tee", "jacket"], extraHeart: true, extraSlot: true });
   });
 });
 
@@ -128,5 +128,14 @@ describe("战斗出题", () => {
     const count = (kind: string) => high.filter((monster) => monster === kind).length;
     expect(count("lantern")).toBeGreaterThan(count("blob"));
     expect(count("lantern")).toBeGreaterThan(count("kite"));
+  });
+});
+
+describe("早期存档", () => {
+  it("长袍叫法的存档能读出来，换成现在的衣服叫法，星星不丢", () => {
+    const old = { ...newProfile(), stars: 42, meta: { extraHeart: true, extraSlot: false, robe: "yuebai", robesOwned: ["zhuqing", "yuebai"] } };
+    const p = loadProfile(JSON.stringify(old));
+    expect(p.stars).toBe(42);
+    expect(p.meta).toEqual({ extraHeart: true, extraSlot: false, outfit: "jacket", outfitsOwned: ["tee", "jacket"] });
   });
 });

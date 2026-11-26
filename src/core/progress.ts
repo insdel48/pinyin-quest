@@ -7,7 +7,7 @@ export type AnswerResult = "correct" | "assisted" | "wrong";
 export function newProfile(): Profile {
   return {
     version: 1, stars: 0, level: 1, runsCompleted: 0, recent: [], items: {}, collected: [],
-    meta: { extraHeart: false, extraSlot: false, robe: "zhuqing", robesOwned: ["zhuqing"] },
+    meta: { extraHeart: false, extraSlot: false, outfit: "tee", outfitsOwned: ["tee"] },
     bestLayer: 0,
   };
 }
@@ -20,13 +20,20 @@ export function loadProfile(json: string | null): Profile {
   if (json === null) return newProfile();
   try {
     const p = JSON.parse(json);
-    const isRobe = (id: unknown) => id === "zhuqing" || id === "yuebai";
+    // 早期存档里的衣服叫法（长袍）换成现在的
+    const OLD: Record<string, string> = { zhuqing: "tee", yuebai: "jacket" };
+    if (p?.meta && "robe" in p.meta) {
+      p.meta.outfit = OLD[p.meta.robe] ?? "tee";
+      p.meta.outfitsOwned = Array.isArray(p.meta.robesOwned) ? p.meta.robesOwned.map((r: string) => OLD[r] ?? r) : ["tee"];
+      delete p.meta.robe; delete p.meta.robesOwned;
+    }
+    const isOutfit = (id: unknown) => id === "tee" || id === "jacket";
     if (p?.version === 1 && [1, 2, 3, 4, 5].includes(p.level)
       && [p.stars, p.runsCompleted, p.bestLayer].every(nonnegativeInteger)
       && Array.isArray(p.recent) && p.recent.every((value: unknown) => typeof value === "boolean")
       && Array.isArray(p.collected) && p.collected.every((id: unknown) => typeof id === "string")
       && typeof p.meta?.extraHeart === "boolean" && typeof p.meta.extraSlot === "boolean"
-      && isRobe(p.meta.robe) && Array.isArray(p.meta.robesOwned) && p.meta.robesOwned.every(isRobe)
+      && isOutfit(p.meta.outfit) && Array.isArray(p.meta.outfitsOwned) && p.meta.outfitsOwned.every(isOutfit)
       && p.items && typeof p.items === "object" && !Array.isArray(p.items)
       && Object.values(p.items).every((stat) => {
         const s = stat as Partial<ItemStat> | null;
@@ -150,7 +157,7 @@ export function starsFor(result: AnswerResult, boons: BoonId[]): number {
 }
 
 export const SHOP = [
-  { id: "robe-yuebai", cost: 30 },
+  { id: "outfit-jacket", cost: 30 },
   { id: "extra-heart", cost: 60 },
   { id: "extra-slot", cost: 80 },
 ] as const;
@@ -159,9 +166,9 @@ export function buy(p: Profile, id: (typeof SHOP)[number]["id"]): boolean {
   const offer = SHOP.find((entry) => entry.id === id);
   if (!offer || p.stars < offer.cost) return false;
 
-  if (id === "robe-yuebai") {
-    if (p.meta.robesOwned.includes("yuebai")) return false;
-    p.meta.robesOwned.push("yuebai");
+  if (id === "outfit-jacket") {
+    if (p.meta.outfitsOwned.includes("jacket")) return false;
+    p.meta.outfitsOwned.push("jacket");
   } else {
     const key = id === "extra-heart" ? "extraHeart" : "extraSlot";
     if (p.meta[key]) return false;

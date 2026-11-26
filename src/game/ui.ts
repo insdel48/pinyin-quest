@@ -40,7 +40,7 @@ export const ICON = {
   home: svg(`<path d="M5 15L16 5l11 10"/><path d="M8 13v13h16V13"/><path d="M13 26v-7h6v7"/>`),
   play: svg(`<path d="M10 6l15 10-15 10z" fill="currentColor"/>`),
   finger: svg(`<path d="M13 28c-3-2-6-7-7-10-.5-2 2-3 3.5-1.5L12 19V6.5a2 2 0 0 1 4 0V15v-3a2 2 0 0 1 4 0v4-2a2 2 0 0 1 4 0v8c0 4-2 6-3 6z" fill="#f8f2e3"/>`),
-  hat: svg(`<path d="M2 20L16 9l14 11c-8 2-20 2-28 0z" fill="#3a372f"/><circle cx="16" cy="22" r="4" fill="#f2e4cc"/>`),
+  kid: svg(`<circle cx="16" cy="18" r="10" fill="#f0cfae"/><path d="M6 17c0-7 4-11 10-11s10 4 10 11c-2-3-3-5-4-6l-1 3-2-4-2 3-2-4-2 4-2-3-1 4c-1-1-3 1-4 3z" fill="#22201d" stroke="#22201d"/><circle cx="12.5" cy="18.5" r="1.3" fill="#2b2a26" stroke="none"/><circle cx="19.5" cy="18.5" r="1.3" fill="#2b2a26" stroke="none"/><path d="M12 22q4 3 8 0"/><path d="M15.5 23.5q1 2 2 0" fill="#e9858a" stroke="#e9858a"/>`),
 };
 
 /** 四种声调的标准划法，画在 340×64 的框里 */

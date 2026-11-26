@@ -61,6 +61,7 @@ export class Tutorial {
 
     // 1. 听：点喇叭
     this.step(0);
+    w.cheer();
     await say("v:t-hello");
     this.bubble.hidden = false;
     this.point(900, 250);
@@ -125,6 +126,7 @@ export class Tutorial {
     await say("s:māo");
     await new Promise<void>(res => w.defeat(res));
     w.clearDrops();
+    w.cheer();
     await say("v:t-done");
     this.end();
   }
