@@ -1,0 +1,2718 @@
+[
+ {
+  "id": "c-妈",
+  "kind": "char",
+  "hanzi": "妈",
+  "pinyin": [
+   "mā"
+  ]
+ },
+ {
+  "id": "c-爸",
+  "kind": "char",
+  "hanzi": "爸",
+  "pinyin": [
+   "bà"
+  ]
+ },
+ {
+  "id": "c-马",
+  "kind": "char",
+  "hanzi": "马",
+  "pinyin": [
+   "mǎ"
+  ],
+  "pic": "horse"
+ },
+ {
+  "id": "c-米",
+  "kind": "char",
+  "hanzi": "米",
+  "pinyin": [
+   "mǐ"
+  ],
+  "pic": "rice"
+ },
+ {
+  "id": "c-木",
+  "kind": "char",
+  "hanzi": "木",
+  "pinyin": [
+   "mù"
+  ]
+ },
+ {
+  "id": "c-土",
+  "kind": "char",
+  "hanzi": "土",
+  "pinyin": [
+   "tǔ"
+  ]
+ },
+ {
+  "id": "c-鱼",
+  "kind": "char",
+  "hanzi": "鱼",
+  "pinyin": [
+   "yú"
+  ],
+  "pic": "fish"
+ },
+ {
+  "id": "c-大",
+  "kind": "char",
+  "hanzi": "大",
+  "pinyin": [
+   "dà"
+  ]
+ },
+ {
+  "id": "c-八",
+  "kind": "char",
+  "hanzi": "八",
+  "pinyin": [
+   "bā"
+  ]
+ },
+ {
+  "id": "c-爬",
+  "kind": "char",
+  "hanzi": "爬",
+  "pinyin": [
+   "pá"
+  ]
+ },
+ {
+  "id": "c-怕",
+  "kind": "char",
+  "hanzi": "怕",
+  "pinyin": [
+   "pà"
+  ]
+ },
+ {
+  "id": "c-拿",
+  "kind": "char",
+  "hanzi": "拿",
+  "pinyin": [
+   "ná"
+  ]
+ },
+ {
+  "id": "c-他",
+  "kind": "char",
+  "hanzi": "他",
+  "pinyin": [
+   "tā"
+  ]
+ },
+ {
+  "id": "c-打",
+  "kind": "char",
+  "hanzi": "打",
+  "pinyin": [
+   "dǎ"
+  ]
+ },
+ {
+  "id": "c-弟",
+  "kind": "char",
+  "hanzi": "弟",
+  "pinyin": [
+   "dì"
+  ]
+ },
+ {
+  "id": "c-五",
+  "kind": "char",
+  "hanzi": "五",
+  "pinyin": [
+   "wǔ"
+  ]
+ },
+ {
+  "id": "c-雨",
+  "kind": "char",
+  "hanzi": "雨",
+  "pinyin": [
+   "yǔ"
+  ],
+  "pic": "rain"
+ },
+ {
+  "id": "c-七",
+  "kind": "char",
+  "hanzi": "七",
+  "pinyin": [
+   "qī"
+  ]
+ },
+ {
+  "id": "c-皮",
+  "kind": "char",
+  "hanzi": "皮",
+  "pinyin": [
+   "pí"
+  ]
+ },
+ {
+  "id": "c-布",
+  "kind": "char",
+  "hanzi": "布",
+  "pinyin": [
+   "bù"
+  ]
+ },
+ {
+  "id": "c-步",
+  "kind": "char",
+  "hanzi": "步",
+  "pinyin": [
+   "bù"
+  ]
+ },
+ {
+  "id": "c-路",
+  "kind": "char",
+  "hanzi": "路",
+  "pinyin": [
+   "lù"
+  ]
+ },
+ {
+  "id": "c-绿",
+  "kind": "char",
+  "hanzi": "绿",
+  "pinyin": [
+   "lǜ"
+  ]
+ },
+ {
+  "id": "c-女",
+  "kind": "char",
+  "hanzi": "女",
+  "pinyin": [
+   "nǚ"
+  ]
+ },
+ {
+  "id": "c-读",
+  "kind": "char",
+  "hanzi": "读",
+  "pinyin": [
+   "dú"
+  ]
+ },
+ {
+  "id": "c-哭",
+  "kind": "char",
+  "hanzi": "哭",
+  "pinyin": [
+   "kū"
+  ]
+ },
+ {
+  "id": "c-苦",
+  "kind": "char",
+  "hanzi": "苦",
+  "pinyin": [
+   "kǔ"
+  ]
+ },
+ {
+  "id": "c-虎",
+  "kind": "char",
+  "hanzi": "虎",
+  "pinyin": [
+   "hǔ"
+  ],
+  "pic": "tiger"
+ },
+ {
+  "id": "c-鹿",
+  "kind": "char",
+  "hanzi": "鹿",
+  "pinyin": [
+   "lù"
+  ],
+  "pic": "deer"
+ },
+ {
+  "id": "c-兔",
+  "kind": "char",
+  "hanzi": "兔",
+  "pinyin": [
+   "tù"
+  ],
+  "pic": "rabbit"
+ },
+ {
+  "id": "c-鸡",
+  "kind": "char",
+  "hanzi": "鸡",
+  "pinyin": [
+   "jī"
+  ],
+  "pic": "chicken"
+ },
+ {
+  "id": "c-西",
+  "kind": "char",
+  "hanzi": "西",
+  "pinyin": [
+   "xī"
+  ]
+ },
+ {
+  "id": "c-你",
+  "kind": "char",
+  "hanzi": "你",
+  "pinyin": [
+   "nǐ"
+  ]
+ },
+ {
+  "id": "c-骑",
+  "kind": "char",
+  "hanzi": "骑",
+  "pinyin": [
+   "qí"
+  ]
+ },
+ {
+  "id": "c-旗",
+  "kind": "char",
+  "hanzi": "旗",
+  "pinyin": [
+   "qí"
+  ]
+ },
+ {
+  "id": "c-笔",
+  "kind": "char",
+  "hanzi": "笔",
+  "pinyin": [
+   "bǐ"
+  ],
+  "pic": "brush"
+ },
+ {
+  "id": "c-泥",
+  "kind": "char",
+  "hanzi": "泥",
+  "pinyin": [
+   "ní"
+  ]
+ },
+ {
+  "id": "c-梨",
+  "kind": "char",
+  "hanzi": "梨",
+  "pinyin": [
+   "lí"
+  ],
+  "pic": "pear"
+ },
+ {
+  "id": "c-哥",
+  "kind": "char",
+  "hanzi": "哥",
+  "pinyin": [
+   "gē"
+  ]
+ },
+ {
+  "id": "c-河",
+  "kind": "char",
+  "hanzi": "河",
+  "pinyin": [
+   "hé"
+  ]
+ },
+ {
+  "id": "c-喝",
+  "kind": "char",
+  "hanzi": "喝",
+  "pinyin": [
+   "hē"
+  ]
+ },
+ {
+  "id": "c-鹅",
+  "kind": "char",
+  "hanzi": "鹅",
+  "pinyin": [
+   "é"
+  ],
+  "pic": "goose"
+ },
+ {
+  "id": "c-饿",
+  "kind": "char",
+  "hanzi": "饿",
+  "pinyin": [
+   "è"
+  ]
+ },
+ {
+  "id": "c-坡",
+  "kind": "char",
+  "hanzi": "坡",
+  "pinyin": [
+   "pō"
+  ]
+ },
+ {
+  "id": "c-婆",
+  "kind": "char",
+  "hanzi": "婆",
+  "pinyin": [
+   "pó"
+  ]
+ },
+ {
+  "id": "c-摸",
+  "kind": "char",
+  "hanzi": "摸",
+  "pinyin": [
+   "mō"
+  ]
+ },
+ {
+  "id": "c-波",
+  "kind": "char",
+  "hanzi": "波",
+  "pinyin": [
+   "bō"
+  ]
+ },
+ {
+  "id": "c-破",
+  "kind": "char",
+  "hanzi": "破",
+  "pinyin": [
+   "pò"
+  ]
+ },
+ {
+  "id": "c-墨",
+  "kind": "char",
+  "hanzi": "墨",
+  "pinyin": [
+   "mò"
+  ]
+ },
+ {
+  "id": "c-鸭",
+  "kind": "char",
+  "hanzi": "鸭",
+  "pinyin": [
+   "yā"
+  ],
+  "pic": "duck"
+ },
+ {
+  "id": "c-牙",
+  "kind": "char",
+  "hanzi": "牙",
+  "pinyin": [
+   "yá"
+  ]
+ },
+ {
+  "id": "c-娃",
+  "kind": "char",
+  "hanzi": "娃",
+  "pinyin": [
+   "wá"
+  ]
+ },
+ {
+  "id": "c-瓦",
+  "kind": "char",
+  "hanzi": "瓦",
+  "pinyin": [
+   "wǎ"
+  ]
+ },
+ {
+  "id": "c-我",
+  "kind": "char",
+  "hanzi": "我",
+  "pinyin": [
+   "wǒ"
+  ]
+ },
+ {
+  "id": "c-窝",
+  "kind": "char",
+  "hanzi": "窝",
+  "pinyin": [
+   "wō"
+  ]
+ },
+ {
+  "id": "c-屋",
+  "kind": "char",
+  "hanzi": "屋",
+  "pinyin": [
+   "wū"
+  ]
+ },
+ {
+  "id": "c-舞",
+  "kind": "char",
+  "hanzi": "舞",
+  "pinyin": [
+   "wǔ"
+  ]
+ },
+ {
+  "id": "c-鼓",
+  "kind": "char",
+  "hanzi": "鼓",
+  "pinyin": [
+   "gǔ"
+  ],
+  "pic": "drum"
+ },
+ {
+  "id": "c-谷",
+  "kind": "char",
+  "hanzi": "谷",
+  "pinyin": [
+   "gǔ"
+  ]
+ },
+ {
+  "id": "c-足",
+  "kind": "char",
+  "hanzi": "足",
+  "pinyin": [
+   "zú"
+  ]
+ },
+ {
+  "id": "c-粗",
+  "kind": "char",
+  "hanzi": "粗",
+  "pinyin": [
+   "cū"
+  ]
+ },
+ {
+  "id": "c-书",
+  "kind": "char",
+  "hanzi": "书",
+  "pinyin": [
+   "shū"
+  ],
+  "pic": "book"
+ },
+ {
+  "id": "c-树",
+  "kind": "char",
+  "hanzi": "树",
+  "pinyin": [
+   "shù"
+  ],
+  "pic": "tree"
+ },
+ {
+  "id": "c-衣",
+  "kind": "char",
+  "hanzi": "衣",
+  "pinyin": [
+   "yī"
+  ]
+ },
+ {
+  "id": "c-日",
+  "kind": "char",
+  "hanzi": "日",
+  "pinyin": [
+   "rì"
+  ],
+  "pic": "sun"
+ },
+ {
+  "id": "c-去",
+  "kind": "char",
+  "hanzi": "去",
+  "pinyin": [
+   "qù"
+  ]
+ },
+ {
+  "id": "c-鸟",
+  "kind": "char",
+  "hanzi": "鸟",
+  "pinyin": [
+   "niǎo"
+  ],
+  "pic": "bird"
+ },
+ {
+  "id": "c-猫",
+  "kind": "char",
+  "hanzi": "猫",
+  "pinyin": [
+   "māo"
+  ],
+  "pic": "cat"
+ },
+ {
+  "id": "c-水",
+  "kind": "char",
+  "hanzi": "水",
+  "pinyin": [
+   "shuǐ"
+  ],
+  "pic": "water"
+ },
+ {
+  "id": "c-山",
+  "kind": "char",
+  "hanzi": "山",
+  "pinyin": [
+   "shān"
+  ],
+  "pic": "mountain"
+ },
+ {
+  "id": "c-羊",
+  "kind": "char",
+  "hanzi": "羊",
+  "pinyin": [
+   "yáng"
+  ],
+  "pic": "sheep"
+ },
+ {
+  "id": "c-牛",
+  "kind": "char",
+  "hanzi": "牛",
+  "pinyin": [
+   "niú"
+  ],
+  "pic": "cow"
+ },
+ {
+  "id": "c-狗",
+  "kind": "char",
+  "hanzi": "狗",
+  "pinyin": [
+   "gǒu"
+  ],
+  "pic": "dog"
+ },
+ {
+  "id": "c-猴",
+  "kind": "char",
+  "hanzi": "猴",
+  "pinyin": [
+   "hóu"
+  ]
+ },
+ {
+  "id": "c-刀",
+  "kind": "char",
+  "hanzi": "刀",
+  "pinyin": [
+   "dāo"
+  ]
+ },
+ {
+  "id": "c-桃",
+  "kind": "char",
+  "hanzi": "桃",
+  "pinyin": [
+   "táo"
+  ],
+  "pic": "peach"
+ },
+ {
+  "id": "c-草",
+  "kind": "char",
+  "hanzi": "草",
+  "pinyin": [
+   "cǎo"
+  ],
+  "pic": "grass"
+ },
+ {
+  "id": "c-包",
+  "kind": "char",
+  "hanzi": "包",
+  "pinyin": [
+   "bāo"
+  ]
+ },
+ {
+  "id": "c-跑",
+  "kind": "char",
+  "hanzi": "跑",
+  "pinyin": [
+   "pǎo"
+  ]
+ },
+ {
+  "id": "c-高",
+  "kind": "char",
+  "hanzi": "高",
+  "pinyin": [
+   "gāo"
+  ]
+ },
+ {
+  "id": "c-毛",
+  "kind": "char",
+  "hanzi": "毛",
+  "pinyin": [
+   "máo"
+  ]
+ },
+ {
+  "id": "c-帽",
+  "kind": "char",
+  "hanzi": "帽",
+  "pinyin": [
+   "mào"
+  ],
+  "pic": "hat"
+ },
+ {
+  "id": "c-手",
+  "kind": "char",
+  "hanzi": "手",
+  "pinyin": [
+   "shǒu"
+  ],
+  "pic": "hand"
+ },
+ {
+  "id": "c-口",
+  "kind": "char",
+  "hanzi": "口",
+  "pinyin": [
+   "kǒu"
+  ]
+ },
+ {
+  "id": "c-头",
+  "kind": "char",
+  "hanzi": "头",
+  "pinyin": [
+   "tóu"
+  ]
+ },
+ {
+  "id": "c-豆",
+  "kind": "char",
+  "hanzi": "豆",
+  "pinyin": [
+   "dòu"
+  ]
+ },
+ {
+  "id": "c-走",
+  "kind": "char",
+  "hanzi": "走",
+  "pinyin": [
+   "zǒu"
+  ]
+ },
+ {
+  "id": "c-楼",
+  "kind": "char",
+  "hanzi": "楼",
+  "pinyin": [
+   "lóu"
+  ]
+ },
+ {
+  "id": "c-白",
+  "kind": "char",
+  "hanzi": "白",
+  "pinyin": [
+   "bái"
+  ]
+ },
+ {
+  "id": "c-菜",
+  "kind": "char",
+  "hanzi": "菜",
+  "pinyin": [
+   "cài"
+  ]
+ },
+ {
+  "id": "c-来",
+  "kind": "char",
+  "hanzi": "来",
+  "pinyin": [
+   "lái"
+  ]
+ },
+ {
+  "id": "c-海",
+  "kind": "char",
+  "hanzi": "海",
+  "pinyin": [
+   "hǎi"
+  ]
+ },
+ {
+  "id": "c-爱",
+  "kind": "char",
+  "hanzi": "爱",
+  "pinyin": [
+   "ài"
+  ]
+ },
+ {
+  "id": "c-飞",
+  "kind": "char",
+  "hanzi": "飞",
+  "pinyin": [
+   "fēi"
+  ]
+ },
+ {
+  "id": "c-杯",
+  "kind": "char",
+  "hanzi": "杯",
+  "pinyin": [
+   "bēi"
+  ],
+  "pic": "cup"
+ },
+ {
+  "id": "c-黑",
+  "kind": "char",
+  "hanzi": "黑",
+  "pinyin": [
+   "hēi"
+  ]
+ },
+ {
+  "id": "c-美",
+  "kind": "char",
+  "hanzi": "美",
+  "pinyin": [
+   "měi"
+  ]
+ },
+ {
+  "id": "c-嘴",
+  "kind": "char",
+  "hanzi": "嘴",
+  "pinyin": [
+   "zuǐ"
+  ]
+ },
+ {
+  "id": "c-腿",
+  "kind": "char",
+  "hanzi": "腿",
+  "pinyin": [
+   "tuǐ"
+  ]
+ },
+ {
+  "id": "c-贵",
+  "kind": "char",
+  "hanzi": "贵",
+  "pinyin": [
+   "guì"
+  ]
+ },
+ {
+  "id": "c-球",
+  "kind": "char",
+  "hanzi": "球",
+  "pinyin": [
+   "qiú"
+  ],
+  "pic": "ball"
+ },
+ {
+  "id": "c-六",
+  "kind": "char",
+  "hanzi": "六",
+  "pinyin": [
+   "liù"
+  ]
+ },
+ {
+  "id": "c-九",
+  "kind": "char",
+  "hanzi": "九",
+  "pinyin": [
+   "jiǔ"
+  ]
+ },
+ {
+  "id": "c-秋",
+  "kind": "char",
+  "hanzi": "秋",
+  "pinyin": [
+   "qiū"
+  ]
+ },
+ {
+  "id": "c-叶",
+  "kind": "char",
+  "hanzi": "叶",
+  "pinyin": [
+   "yè"
+  ],
+  "pic": "leaf"
+ },
+ {
+  "id": "c-月",
+  "kind": "char",
+  "hanzi": "月",
+  "pinyin": [
+   "yuè"
+  ],
+  "pic": "moon"
+ },
+ {
+  "id": "c-鞋",
+  "kind": "char",
+  "hanzi": "鞋",
+  "pinyin": [
+   "xié"
+  ],
+  "pic": "shoe"
+ },
+ {
+  "id": "c-写",
+  "kind": "char",
+  "hanzi": "写",
+  "pinyin": [
+   "xiě"
+  ]
+ },
+ {
+  "id": "c-雪",
+  "kind": "char",
+  "hanzi": "雪",
+  "pinyin": [
+   "xuě"
+  ],
+  "pic": "snow"
+ },
+ {
+  "id": "c-学",
+  "kind": "char",
+  "hanzi": "学",
+  "pinyin": [
+   "xué"
+  ]
+ },
+ {
+  "id": "c-耳",
+  "kind": "char",
+  "hanzi": "耳",
+  "pinyin": [
+   "ěr"
+  ],
+  "pic": "ear"
+ },
+ {
+  "id": "c-儿",
+  "kind": "char",
+  "hanzi": "儿",
+  "pinyin": [
+   "ér"
+  ]
+ },
+ {
+  "id": "c-二",
+  "kind": "char",
+  "hanzi": "二",
+  "pinyin": [
+   "èr"
+  ]
+ },
+ {
+  "id": "c-门",
+  "kind": "char",
+  "hanzi": "门",
+  "pinyin": [
+   "mén"
+  ],
+  "pic": "door"
+ },
+ {
+  "id": "c-本",
+  "kind": "char",
+  "hanzi": "本",
+  "pinyin": [
+   "běn"
+  ]
+ },
+ {
+  "id": "c-人",
+  "kind": "char",
+  "hanzi": "人",
+  "pinyin": [
+   "rén"
+  ]
+ },
+ {
+  "id": "c-森",
+  "kind": "char",
+  "hanzi": "森",
+  "pinyin": [
+   "sēn"
+  ]
+ },
+ {
+  "id": "c-心",
+  "kind": "char",
+  "hanzi": "心",
+  "pinyin": [
+   "xīn"
+  ]
+ },
+ {
+  "id": "c-林",
+  "kind": "char",
+  "hanzi": "林",
+  "pinyin": [
+   "lín"
+  ]
+ },
+ {
+  "id": "c-金",
+  "kind": "char",
+  "hanzi": "金",
+  "pinyin": [
+   "jīn"
+  ]
+ },
+ {
+  "id": "c-云",
+  "kind": "char",
+  "hanzi": "云",
+  "pinyin": [
+   "yún"
+  ],
+  "pic": "cloud"
+ },
+ {
+  "id": "c-春",
+  "kind": "char",
+  "hanzi": "春",
+  "pinyin": [
+   "chūn"
+  ]
+ },
+ {
+  "id": "c-船",
+  "kind": "char",
+  "hanzi": "船",
+  "pinyin": [
+   "chuán"
+  ],
+  "pic": "boat"
+ },
+ {
+  "id": "c-太",
+  "kind": "char",
+  "hanzi": "太",
+  "pinyin": [
+   "tài"
+  ]
+ },
+ {
+  "id": "c-阳",
+  "kind": "char",
+  "hanzi": "阳",
+  "pinyin": [
+   "yáng"
+  ]
+ },
+ {
+  "id": "c-方",
+  "kind": "char",
+  "hanzi": "方",
+  "pinyin": [
+   "fāng"
+  ]
+ },
+ {
+  "id": "c-糖",
+  "kind": "char",
+  "hanzi": "糖",
+  "pinyin": [
+   "táng"
+  ]
+ },
+ {
+  "id": "c-狼",
+  "kind": "char",
+  "hanzi": "狼",
+  "pinyin": [
+   "láng"
+  ]
+ },
+ {
+  "id": "c-灯",
+  "kind": "char",
+  "hanzi": "灯",
+  "pinyin": [
+   "dēng"
+  ],
+  "pic": "lamp"
+ },
+ {
+  "id": "c-风",
+  "kind": "char",
+  "hanzi": "风",
+  "pinyin": [
+   "fēng"
+  ]
+ },
+ {
+  "id": "c-星",
+  "kind": "char",
+  "hanzi": "星",
+  "pinyin": [
+   "xīng"
+  ],
+  "pic": "star"
+ },
+ {
+  "id": "c-冰",
+  "kind": "char",
+  "hanzi": "冰",
+  "pinyin": [
+   "bīng"
+  ]
+ },
+ {
+  "id": "c-鹰",
+  "kind": "char",
+  "hanzi": "鹰",
+  "pinyin": [
+   "yīng"
+  ]
+ },
+ {
+  "id": "c-东",
+  "kind": "char",
+  "hanzi": "东",
+  "pinyin": [
+   "dōng"
+  ]
+ },
+ {
+  "id": "c-红",
+  "kind": "char",
+  "hanzi": "红",
+  "pinyin": [
+   "hóng"
+  ]
+ },
+ {
+  "id": "c-龙",
+  "kind": "char",
+  "hanzi": "龙",
+  "pinyin": [
+   "lóng"
+  ]
+ },
+ {
+  "id": "c-虫",
+  "kind": "char",
+  "hanzi": "虫",
+  "pinyin": [
+   "chóng"
+  ]
+ },
+ {
+  "id": "c-钟",
+  "kind": "char",
+  "hanzi": "钟",
+  "pinyin": [
+   "zhōng"
+  ],
+  "pic": "clock"
+ },
+ {
+  "id": "c-熊",
+  "kind": "char",
+  "hanzi": "熊",
+  "pinyin": [
+   "xióng"
+  ]
+ },
+ {
+  "id": "c-花",
+  "kind": "char",
+  "hanzi": "花",
+  "pinyin": [
+   "huā"
+  ],
+  "pic": "flower"
+ },
+ {
+  "id": "c-瓜",
+  "kind": "char",
+  "hanzi": "瓜",
+  "pinyin": [
+   "guā"
+  ]
+ },
+ {
+  "id": "c-家",
+  "kind": "char",
+  "hanzi": "家",
+  "pinyin": [
+   "jiā"
+  ]
+ },
+ {
+  "id": "c-虾",
+  "kind": "char",
+  "hanzi": "虾",
+  "pinyin": [
+   "xiā"
+  ]
+ },
+ {
+  "id": "c-果",
+  "kind": "char",
+  "hanzi": "果",
+  "pinyin": [
+   "guǒ"
+  ]
+ },
+ {
+  "id": "c-火",
+  "kind": "char",
+  "hanzi": "火",
+  "pinyin": [
+   "huǒ"
+  ],
+  "pic": "fire"
+ },
+ {
+  "id": "c-国",
+  "kind": "char",
+  "hanzi": "国",
+  "pinyin": [
+   "guó"
+  ]
+ },
+ {
+  "id": "c-多",
+  "kind": "char",
+  "hanzi": "多",
+  "pinyin": [
+   "duō"
+  ]
+ },
+ {
+  "id": "c-坐",
+  "kind": "char",
+  "hanzi": "坐",
+  "pinyin": [
+   "zuò"
+  ]
+ },
+ {
+  "id": "c-桌",
+  "kind": "char",
+  "hanzi": "桌",
+  "pinyin": [
+   "zhuō"
+  ]
+ },
+ {
+  "id": "c-天",
+  "kind": "char",
+  "hanzi": "天",
+  "pinyin": [
+   "tiān"
+  ]
+ },
+ {
+  "id": "c-田",
+  "kind": "char",
+  "hanzi": "田",
+  "pinyin": [
+   "tián"
+  ]
+ },
+ {
+  "id": "c-点",
+  "kind": "char",
+  "hanzi": "点",
+  "pinyin": [
+   "diǎn"
+  ]
+ },
+ {
+  "id": "c-电",
+  "kind": "char",
+  "hanzi": "电",
+  "pinyin": [
+   "diàn"
+  ]
+ },
+ {
+  "id": "c-年",
+  "kind": "char",
+  "hanzi": "年",
+  "pinyin": [
+   "nián"
+  ]
+ },
+ {
+  "id": "c-前",
+  "kind": "char",
+  "hanzi": "前",
+  "pinyin": [
+   "qián"
+  ]
+ },
+ {
+  "id": "c-钱",
+  "kind": "char",
+  "hanzi": "钱",
+  "pinyin": [
+   "qián"
+  ]
+ },
+ {
+  "id": "c-象",
+  "kind": "char",
+  "hanzi": "象",
+  "pinyin": [
+   "xiàng"
+  ],
+  "pic": "elephant"
+ },
+ {
+  "id": "c-江",
+  "kind": "char",
+  "hanzi": "江",
+  "pinyin": [
+   "jiāng"
+  ]
+ },
+ {
+  "id": "c-香",
+  "kind": "char",
+  "hanzi": "香",
+  "pinyin": [
+   "xiāng"
+  ]
+ },
+ {
+  "id": "c-墙",
+  "kind": "char",
+  "hanzi": "墙",
+  "pinyin": [
+   "qiáng"
+  ]
+ },
+ {
+  "id": "c-窗",
+  "kind": "char",
+  "hanzi": "窗",
+  "pinyin": [
+   "chuāng"
+  ]
+ },
+ {
+  "id": "c-床",
+  "kind": "char",
+  "hanzi": "床",
+  "pinyin": [
+   "chuáng"
+  ],
+  "pic": "bed"
+ },
+ {
+  "id": "c-光",
+  "kind": "char",
+  "hanzi": "光",
+  "pinyin": [
+   "guāng"
+  ]
+ },
+ {
+  "id": "c-黄",
+  "kind": "char",
+  "hanzi": "黄",
+  "pinyin": [
+   "huáng"
+  ]
+ },
+ {
+  "id": "c-王",
+  "kind": "char",
+  "hanzi": "王",
+  "pinyin": [
+   "wáng"
+  ]
+ },
+ {
+  "id": "c-晚",
+  "kind": "char",
+  "hanzi": "晚",
+  "pinyin": [
+   "wǎn"
+  ]
+ },
+ {
+  "id": "c-碗",
+  "kind": "char",
+  "hanzi": "碗",
+  "pinyin": [
+   "wǎn"
+  ],
+  "pic": "bowl"
+ },
+ {
+  "id": "c-弯",
+  "kind": "char",
+  "hanzi": "弯",
+  "pinyin": [
+   "wān"
+  ]
+ },
+ {
+  "id": "c-万",
+  "kind": "char",
+  "hanzi": "万",
+  "pinyin": [
+   "wàn"
+  ]
+ },
+ {
+  "id": "c-网",
+  "kind": "char",
+  "hanzi": "网",
+  "pinyin": [
+   "wǎng"
+  ]
+ },
+ {
+  "id": "c-文",
+  "kind": "char",
+  "hanzi": "文",
+  "pinyin": [
+   "wén"
+  ]
+ },
+ {
+  "id": "c-问",
+  "kind": "char",
+  "hanzi": "问",
+  "pinyin": [
+   "wèn"
+  ]
+ },
+ {
+  "id": "c-外",
+  "kind": "char",
+  "hanzi": "外",
+  "pinyin": [
+   "wài"
+  ]
+ },
+ {
+  "id": "c-快",
+  "kind": "char",
+  "hanzi": "快",
+  "pinyin": [
+   "kuài"
+  ]
+ },
+ {
+  "id": "c-块",
+  "kind": "char",
+  "hanzi": "块",
+  "pinyin": [
+   "kuài"
+  ]
+ },
+ {
+  "id": "c-小",
+  "kind": "char",
+  "hanzi": "小",
+  "pinyin": [
+   "xiǎo"
+  ]
+ },
+ {
+  "id": "c-笑",
+  "kind": "char",
+  "hanzi": "笑",
+  "pinyin": [
+   "xiào"
+  ]
+ },
+ {
+  "id": "c-跳",
+  "kind": "char",
+  "hanzi": "跳",
+  "pinyin": [
+   "tiào"
+  ]
+ },
+ {
+  "id": "c-条",
+  "kind": "char",
+  "hanzi": "条",
+  "pinyin": [
+   "tiáo"
+  ]
+ },
+ {
+  "id": "c-叫",
+  "kind": "char",
+  "hanzi": "叫",
+  "pinyin": [
+   "jiào"
+  ]
+ },
+ {
+  "id": "c-桥",
+  "kind": "char",
+  "hanzi": "桥",
+  "pinyin": [
+   "qiáo"
+  ],
+  "pic": "bridge"
+ },
+ {
+  "id": "c-表",
+  "kind": "char",
+  "hanzi": "表",
+  "pinyin": [
+   "biǎo"
+  ]
+ },
+ {
+  "id": "c-苗",
+  "kind": "char",
+  "hanzi": "苗",
+  "pinyin": [
+   "miáo"
+  ]
+ },
+ {
+  "id": "c-车",
+  "kind": "char",
+  "hanzi": "车",
+  "pinyin": [
+   "chē"
+  ],
+  "pic": "car"
+ },
+ {
+  "id": "c-伞",
+  "kind": "char",
+  "hanzi": "伞",
+  "pinyin": [
+   "sǎn"
+  ],
+  "pic": "umbrella"
+ },
+ {
+  "id": "c-眼",
+  "kind": "char",
+  "hanzi": "眼",
+  "pinyin": [
+   "yǎn"
+  ],
+  "pic": "eye"
+ },
+ {
+  "id": "c-椅",
+  "kind": "char",
+  "hanzi": "椅",
+  "pinyin": [
+   "yǐ"
+  ]
+ },
+ {
+  "id": "c-唱",
+  "kind": "char",
+  "hanzi": "唱",
+  "pinyin": [
+   "chàng"
+  ]
+ },
+ {
+  "id": "c-吃",
+  "kind": "char",
+  "hanzi": "吃",
+  "pinyin": [
+   "chī"
+  ]
+ },
+ {
+  "id": "c-喜",
+  "kind": "char",
+  "hanzi": "喜",
+  "pinyin": [
+   "xǐ"
+  ]
+ },
+ {
+  "id": "c-欢",
+  "kind": "char",
+  "hanzi": "欢",
+  "pinyin": [
+   "huān"
+  ]
+ },
+ {
+  "id": "c-鼠",
+  "kind": "char",
+  "hanzi": "鼠",
+  "pinyin": [
+   "shǔ"
+  ]
+ },
+ {
+  "id": "c-蛇",
+  "kind": "char",
+  "hanzi": "蛇",
+  "pinyin": [
+   "shé"
+  ]
+ },
+ {
+  "id": "c-猪",
+  "kind": "char",
+  "hanzi": "猪",
+  "pinyin": [
+   "zhū"
+  ]
+ },
+ {
+  "id": "c-蛙",
+  "kind": "char",
+  "hanzi": "蛙",
+  "pinyin": [
+   "wā"
+  ]
+ },
+ {
+  "id": "c-蜂",
+  "kind": "char",
+  "hanzi": "蜂",
+  "pinyin": [
+   "fēng"
+  ]
+ },
+ {
+  "id": "c-蝶",
+  "kind": "char",
+  "hanzi": "蝶",
+  "pinyin": [
+   "dié"
+  ]
+ },
+ {
+  "id": "c-茶",
+  "kind": "char",
+  "hanzi": "茶",
+  "pinyin": [
+   "chá"
+  ]
+ },
+ {
+  "id": "c-饭",
+  "kind": "char",
+  "hanzi": "饭",
+  "pinyin": [
+   "fàn"
+  ]
+ },
+ {
+  "id": "c-面",
+  "kind": "char",
+  "hanzi": "面",
+  "pinyin": [
+   "miàn"
+  ]
+ },
+ {
+  "id": "c-蛋",
+  "kind": "char",
+  "hanzi": "蛋",
+  "pinyin": [
+   "dàn"
+  ]
+ },
+ {
+  "id": "c-奶",
+  "kind": "char",
+  "hanzi": "奶",
+  "pinyin": [
+   "nǎi"
+  ]
+ },
+ {
+  "id": "c-歌",
+  "kind": "char",
+  "hanzi": "歌",
+  "pinyin": [
+   "gē"
+  ]
+ },
+ {
+  "id": "c-画",
+  "kind": "char",
+  "hanzi": "画",
+  "pinyin": [
+   "huà"
+  ]
+ },
+ {
+  "id": "c-字",
+  "kind": "char",
+  "hanzi": "字",
+  "pinyin": [
+   "zì"
+  ]
+ },
+ {
+  "id": "c-课",
+  "kind": "char",
+  "hanzi": "课",
+  "pinyin": [
+   "kè"
+  ]
+ },
+ {
+  "id": "c-校",
+  "kind": "char",
+  "hanzi": "校",
+  "pinyin": [
+   "xiào"
+  ]
+ },
+ {
+  "id": "c-园",
+  "kind": "char",
+  "hanzi": "园",
+  "pinyin": [
+   "yuán"
+  ]
+ },
+ {
+  "id": "c-夏",
+  "kind": "char",
+  "hanzi": "夏",
+  "pinyin": [
+   "xià"
+  ]
+ },
+ {
+  "id": "c-冬",
+  "kind": "char",
+  "hanzi": "冬",
+  "pinyin": [
+   "dōng"
+  ]
+ },
+ {
+  "id": "c-早",
+  "kind": "char",
+  "hanzi": "早",
+  "pinyin": [
+   "zǎo"
+  ]
+ },
+ {
+  "id": "w-太阳",
+  "kind": "word",
+  "hanzi": "太阳",
+  "pinyin": [
+   "tài",
+   "yáng"
+  ],
+  "pic": "sun"
+ },
+ {
+  "id": "w-月亮",
+  "kind": "word",
+  "hanzi": "月亮",
+  "pinyin": [
+   "yuè",
+   "liang"
+  ],
+  "pic": "moon"
+ },
+ {
+  "id": "w-星星",
+  "kind": "word",
+  "hanzi": "星星",
+  "pinyin": [
+   "xīng",
+   "xing"
+  ],
+  "pic": "star"
+ },
+ {
+  "id": "w-白云",
+  "kind": "word",
+  "hanzi": "白云",
+  "pinyin": [
+   "bái",
+   "yún"
+  ],
+  "pic": "cloud"
+ },
+ {
+  "id": "w-大山",
+  "kind": "word",
+  "hanzi": "大山",
+  "pinyin": [
+   "dà",
+   "shān"
+  ],
+  "pic": "mountain"
+ },
+ {
+  "id": "w-小河",
+  "kind": "word",
+  "hanzi": "小河",
+  "pinyin": [
+   "xiǎo",
+   "hé"
+  ],
+  "pic": "river"
+ },
+ {
+  "id": "w-花朵",
+  "kind": "word",
+  "hanzi": "花朵",
+  "pinyin": [
+   "huā",
+   "duǒ"
+  ],
+  "pic": "flower"
+ },
+ {
+  "id": "w-小草",
+  "kind": "word",
+  "hanzi": "小草",
+  "pinyin": [
+   "xiǎo",
+   "cǎo"
+  ],
+  "pic": "grass"
+ },
+ {
+  "id": "w-大树",
+  "kind": "word",
+  "hanzi": "大树",
+  "pinyin": [
+   "dà",
+   "shù"
+  ],
+  "pic": "tree"
+ },
+ {
+  "id": "w-熊猫",
+  "kind": "word",
+  "hanzi": "熊猫",
+  "pinyin": [
+   "xióng",
+   "māo"
+  ],
+  "pic": "panda"
+ },
+ {
+  "id": "w-小猫",
+  "kind": "word",
+  "hanzi": "小猫",
+  "pinyin": [
+   "xiǎo",
+   "māo"
+  ],
+  "pic": "cat"
+ },
+ {
+  "id": "w-小狗",
+  "kind": "word",
+  "hanzi": "小狗",
+  "pinyin": [
+   "xiǎo",
+   "gǒu"
+  ],
+  "pic": "dog"
+ },
+ {
+  "id": "w-老虎",
+  "kind": "word",
+  "hanzi": "老虎",
+  "pinyin": [
+   "lǎo",
+   "hǔ"
+  ],
+  "pic": "tiger"
+ },
+ {
+  "id": "w-兔子",
+  "kind": "word",
+  "hanzi": "兔子",
+  "pinyin": [
+   "tù",
+   "zi"
+  ],
+  "pic": "rabbit"
+ },
+ {
+  "id": "w-公鸡",
+  "kind": "word",
+  "hanzi": "公鸡",
+  "pinyin": [
+   "gōng",
+   "jī"
+  ],
+  "pic": "chicken"
+ },
+ {
+  "id": "w-小鸟",
+  "kind": "word",
+  "hanzi": "小鸟",
+  "pinyin": [
+   "xiǎo",
+   "niǎo"
+  ],
+  "pic": "bird"
+ },
+ {
+  "id": "w-金鱼",
+  "kind": "word",
+  "hanzi": "金鱼",
+  "pinyin": [
+   "jīn",
+   "yú"
+  ],
+  "pic": "fish"
+ },
+ {
+  "id": "w-大象",
+  "kind": "word",
+  "hanzi": "大象",
+  "pinyin": [
+   "dà",
+   "xiàng"
+  ],
+  "pic": "elephant"
+ },
+ {
+  "id": "w-狮子",
+  "kind": "word",
+  "hanzi": "狮子",
+  "pinyin": [
+   "shī",
+   "zi"
+  ]
+ },
+ {
+  "id": "w-猴子",
+  "kind": "word",
+  "hanzi": "猴子",
+  "pinyin": [
+   "hóu",
+   "zi"
+  ]
+ },
+ {
+  "id": "w-苹果",
+  "kind": "word",
+  "hanzi": "苹果",
+  "pinyin": [
+   "píng",
+   "guǒ"
+  ],
+  "pic": "apple"
+ },
+ {
+  "id": "w-西瓜",
+  "kind": "word",
+  "hanzi": "西瓜",
+  "pinyin": [
+   "xī",
+   "guā"
+  ],
+  "pic": "watermelon"
+ },
+ {
+  "id": "w-香蕉",
+  "kind": "word",
+  "hanzi": "香蕉",
+  "pinyin": [
+   "xiāng",
+   "jiāo"
+  ]
+ },
+ {
+  "id": "w-葡萄",
+  "kind": "word",
+  "hanzi": "葡萄",
+  "pinyin": [
+   "pú",
+   "tao"
+  ]
+ },
+ {
+  "id": "w-米饭",
+  "kind": "word",
+  "hanzi": "米饭",
+  "pinyin": [
+   "mǐ",
+   "fàn"
+  ]
+ },
+ {
+  "id": "w-面条",
+  "kind": "word",
+  "hanzi": "面条",
+  "pinyin": [
+   "miàn",
+   "tiáo"
+  ]
+ },
+ {
+  "id": "w-鸡蛋",
+  "kind": "word",
+  "hanzi": "鸡蛋",
+  "pinyin": [
+   "jī",
+   "dàn"
+  ],
+  "pic": "egg"
+ },
+ {
+  "id": "w-牛奶",
+  "kind": "word",
+  "hanzi": "牛奶",
+  "pinyin": [
+   "niú",
+   "nǎi"
+  ]
+ },
+ {
+  "id": "w-老师",
+  "kind": "word",
+  "hanzi": "老师",
+  "pinyin": [
+   "lǎo",
+   "shī"
+  ]
+ },
+ {
+  "id": "w-同学",
+  "kind": "word",
+  "hanzi": "同学",
+  "pinyin": [
+   "tóng",
+   "xué"
+  ]
+ },
+ {
+  "id": "w-朋友",
+  "kind": "word",
+  "hanzi": "朋友",
+  "pinyin": [
+   "péng",
+   "you"
+  ]
+ },
+ {
+  "id": "w-爸爸",
+  "kind": "word",
+  "hanzi": "爸爸",
+  "pinyin": [
+   "bà",
+   "ba"
+  ]
+ },
+ {
+  "id": "w-妈妈",
+  "kind": "word",
+  "hanzi": "妈妈",
+  "pinyin": [
+   "mā",
+   "ma"
+  ]
+ },
+ {
+  "id": "w-爷爷",
+  "kind": "word",
+  "hanzi": "爷爷",
+  "pinyin": [
+   "yé",
+   "ye"
+  ]
+ },
+ {
+  "id": "w-奶奶",
+  "kind": "word",
+  "hanzi": "奶奶",
+  "pinyin": [
+   "nǎi",
+   "nai"
+  ]
+ },
+ {
+  "id": "w-哥哥",
+  "kind": "word",
+  "hanzi": "哥哥",
+  "pinyin": [
+   "gē",
+   "ge"
+  ]
+ },
+ {
+  "id": "w-姐姐",
+  "kind": "word",
+  "hanzi": "姐姐",
+  "pinyin": [
+   "jiě",
+   "jie"
+  ]
+ },
+ {
+  "id": "w-弟弟",
+  "kind": "word",
+  "hanzi": "弟弟",
+  "pinyin": [
+   "dì",
+   "di"
+  ]
+ },
+ {
+  "id": "w-妹妹",
+  "kind": "word",
+  "hanzi": "妹妹",
+  "pinyin": [
+   "mèi",
+   "mei"
+  ]
+ },
+ {
+  "id": "w-书包",
+  "kind": "word",
+  "hanzi": "书包",
+  "pinyin": [
+   "shū",
+   "bāo"
+  ],
+  "pic": "bag"
+ },
+ {
+  "id": "w-铅笔",
+  "kind": "word",
+  "hanzi": "铅笔",
+  "pinyin": [
+   "qiān",
+   "bǐ"
+  ],
+  "pic": "pencil"
+ },
+ {
+  "id": "w-桌子",
+  "kind": "word",
+  "hanzi": "桌子",
+  "pinyin": [
+   "zhuō",
+   "zi"
+  ],
+  "pic": "table"
+ },
+ {
+  "id": "w-椅子",
+  "kind": "word",
+  "hanzi": "椅子",
+  "pinyin": [
+   "yǐ",
+   "zi"
+  ],
+  "pic": "chair"
+ },
+ {
+  "id": "w-衣服",
+  "kind": "word",
+  "hanzi": "衣服",
+  "pinyin": [
+   "yī",
+   "fu"
+  ]
+ },
+ {
+  "id": "w-帽子",
+  "kind": "word",
+  "hanzi": "帽子",
+  "pinyin": [
+   "mào",
+   "zi"
+  ],
+  "pic": "hat"
+ },
+ {
+  "id": "w-鞋子",
+  "kind": "word",
+  "hanzi": "鞋子",
+  "pinyin": [
+   "xié",
+   "zi"
+  ],
+  "pic": "shoe"
+ },
+ {
+  "id": "w-雨伞",
+  "kind": "word",
+  "hanzi": "雨伞",
+  "pinyin": [
+   "yǔ",
+   "sǎn"
+  ],
+  "pic": "umbrella"
+ },
+ {
+  "id": "w-风筝",
+  "kind": "word",
+  "hanzi": "风筝",
+  "pinyin": [
+   "fēng",
+   "zheng"
+  ],
+  "pic": "kite"
+ },
+ {
+  "id": "w-气球",
+  "kind": "word",
+  "hanzi": "气球",
+  "pinyin": [
+   "qì",
+   "qiú"
+  ],
+  "pic": "balloon"
+ },
+ {
+  "id": "w-火车",
+  "kind": "word",
+  "hanzi": "火车",
+  "pinyin": [
+   "huǒ",
+   "chē"
+  ],
+  "pic": "train"
+ },
+ {
+  "id": "w-汽车",
+  "kind": "word",
+  "hanzi": "汽车",
+  "pinyin": [
+   "qì",
+   "chē"
+  ],
+  "pic": "car"
+ },
+ {
+  "id": "w-飞机",
+  "kind": "word",
+  "hanzi": "飞机",
+  "pinyin": [
+   "fēi",
+   "jī"
+  ],
+  "pic": "plane"
+ },
+ {
+  "id": "w-小船",
+  "kind": "word",
+  "hanzi": "小船",
+  "pinyin": [
+   "xiǎo",
+   "chuán"
+  ],
+  "pic": "boat"
+ },
+ {
+  "id": "w-学校",
+  "kind": "word",
+  "hanzi": "学校",
+  "pinyin": [
+   "xué",
+   "xiào"
+  ]
+ },
+ {
+  "id": "w-公园",
+  "kind": "word",
+  "hanzi": "公园",
+  "pinyin": [
+   "gōng",
+   "yuán"
+  ]
+ },
+ {
+  "id": "w-草地",
+  "kind": "word",
+  "hanzi": "草地",
+  "pinyin": [
+   "cǎo",
+   "dì"
+  ]
+ },
+ {
+  "id": "w-森林",
+  "kind": "word",
+  "hanzi": "森林",
+  "pinyin": [
+   "sēn",
+   "lín"
+  ]
+ },
+ {
+  "id": "w-春天",
+  "kind": "word",
+  "hanzi": "春天",
+  "pinyin": [
+   "chūn",
+   "tiān"
+  ]
+ },
+ {
+  "id": "w-夏天",
+  "kind": "word",
+  "hanzi": "夏天",
+  "pinyin": [
+   "xià",
+   "tiān"
+  ]
+ },
+ {
+  "id": "w-秋天",
+  "kind": "word",
+  "hanzi": "秋天",
+  "pinyin": [
+   "qiū",
+   "tiān"
+  ]
+ },
+ {
+  "id": "w-冬天",
+  "kind": "word",
+  "hanzi": "冬天",
+  "pinyin": [
+   "dōng",
+   "tiān"
+  ]
+ },
+ {
+  "id": "w-下雨",
+  "kind": "word",
+  "hanzi": "下雨",
+  "pinyin": [
+   "xià",
+   "yǔ"
+  ],
+  "pic": "rain"
+ },
+ {
+  "id": "w-下雪",
+  "kind": "word",
+  "hanzi": "下雪",
+  "pinyin": [
+   "xià",
+   "xuě"
+  ],
+  "pic": "snow"
+ },
+ {
+  "id": "w-早上",
+  "kind": "word",
+  "hanzi": "早上",
+  "pinyin": [
+   "zǎo",
+   "shang"
+  ]
+ },
+ {
+  "id": "w-晚上",
+  "kind": "word",
+  "hanzi": "晚上",
+  "pinyin": [
+   "wǎn",
+   "shang"
+  ]
+ },
+ {
+  "id": "w-白天",
+  "kind": "word",
+  "hanzi": "白天",
+  "pinyin": [
+   "bái",
+   "tiān"
+  ]
+ },
+ {
+  "id": "w-眼睛",
+  "kind": "word",
+  "hanzi": "眼睛",
+  "pinyin": [
+   "yǎn",
+   "jing"
+  ],
+  "pic": "eye"
+ },
+ {
+  "id": "w-耳朵",
+  "kind": "word",
+  "hanzi": "耳朵",
+  "pinyin": [
+   "ěr",
+   "duo"
+  ],
+  "pic": "ear"
+ },
+ {
+  "id": "w-小手",
+  "kind": "word",
+  "hanzi": "小手",
+  "pinyin": [
+   "xiǎo",
+   "shǒu"
+  ],
+  "pic": "hand"
+ },
+ {
+  "id": "w-嘴巴",
+  "kind": "word",
+  "hanzi": "嘴巴",
+  "pinyin": [
+   "zuǐ",
+   "ba"
+  ]
+ },
+ {
+  "id": "w-唱歌",
+  "kind": "word",
+  "hanzi": "唱歌",
+  "pinyin": [
+   "chàng",
+   "gē"
+  ]
+ },
+ {
+  "id": "w-跳舞",
+  "kind": "word",
+  "hanzi": "跳舞",
+  "pinyin": [
+   "tiào",
+   "wǔ"
+  ]
+ },
+ {
+  "id": "w-画画",
+  "kind": "word",
+  "hanzi": "画画",
+  "pinyin": [
+   "huà",
+   "huà"
+  ]
+ },
+ {
+  "id": "w-读书",
+  "kind": "word",
+  "hanzi": "读书",
+  "pinyin": [
+   "dú",
+   "shū"
+  ]
+ },
+ {
+  "id": "w-写字",
+  "kind": "word",
+  "hanzi": "写字",
+  "pinyin": [
+   "xiě",
+   "zì"
+  ]
+ },
+ {
+  "id": "w-跑步",
+  "kind": "word",
+  "hanzi": "跑步",
+  "pinyin": [
+   "pǎo",
+   "bù"
+  ]
+ },
+ {
+  "id": "w-喝水",
+  "kind": "word",
+  "hanzi": "喝水",
+  "pinyin": [
+   "hē",
+   "shuǐ"
+  ]
+ },
+ {
+  "id": "w-吃饭",
+  "kind": "word",
+  "hanzi": "吃饭",
+  "pinyin": [
+   "chī",
+   "fàn"
+  ]
+ },
+ {
+  "id": "w-睡觉",
+  "kind": "word",
+  "hanzi": "睡觉",
+  "pinyin": [
+   "shuì",
+   "jiào"
+  ]
+ },
+ {
+  "id": "w-红花",
+  "kind": "word",
+  "hanzi": "红花",
+  "pinyin": [
+   "hóng",
+   "huā"
+  ]
+ },
+ {
+  "id": "i-鸟语花香",
+  "kind": "idiom",
+  "hanzi": "鸟语花香",
+  "pinyin": [
+   "niǎo",
+   "yǔ",
+   "huā",
+   "xiāng"
+  ]
+ },
+ {
+  "id": "i-五颜六色",
+  "kind": "idiom",
+  "hanzi": "五颜六色",
+  "pinyin": [
+   "wǔ",
+   "yán",
+   "liù",
+   "sè"
+  ]
+ },
+ {
+  "id": "i-人山人海",
+  "kind": "idiom",
+  "hanzi": "人山人海",
+  "pinyin": [
+   "rén",
+   "shān",
+   "rén",
+   "hǎi"
+  ]
+ },
+ {
+  "id": "i-春暖花开",
+  "kind": "idiom",
+  "hanzi": "春暖花开",
+  "pinyin": [
+   "chūn",
+   "nuǎn",
+   "huā",
+   "kāi"
+  ]
+ },
+ {
+  "id": "i-山清水秀",
+  "kind": "idiom",
+  "hanzi": "山清水秀",
+  "pinyin": [
+   "shān",
+   "qīng",
+   "shuǐ",
+   "xiù"
+  ]
+ },
+ {
+  "id": "i-万紫千红",
+  "kind": "idiom",
+  "hanzi": "万紫千红",
+  "pinyin": [
+   "wàn",
+   "zǐ",
+   "qiān",
+   "hóng"
+  ]
+ },
+ {
+  "id": "i-自言自语",
+  "kind": "idiom",
+  "hanzi": "自言自语",
+  "pinyin": [
+   "zì",
+   "yán",
+   "zì",
+   "yǔ"
+  ]
+ },
+ {
+  "id": "i-十全十美",
+  "kind": "idiom",
+  "hanzi": "十全十美",
+  "pinyin": [
+   "shí",
+   "quán",
+   "shí",
+   "měi"
+  ]
+ },
+ {
+  "id": "i-七上八下",
+  "kind": "idiom",
+  "hanzi": "七上八下",
+  "pinyin": [
+   "qī",
+   "shàng",
+   "bā",
+   "xià"
+  ]
+ },
+ {
+  "id": "i-千言万语",
+  "kind": "idiom",
+  "hanzi": "千言万语",
+  "pinyin": [
+   "qiān",
+   "yán",
+   "wàn",
+   "yǔ"
+  ]
+ },
+ {
+  "id": "i-三心二意",
+  "kind": "idiom",
+  "hanzi": "三心二意",
+  "pinyin": [
+   "sān",
+   "xīn",
+   "èr",
+   "yì"
+  ]
+ },
+ {
+  "id": "i-一心一意",
+  "kind": "idiom",
+  "hanzi": "一心一意",
+  "pinyin": [
+   "yì",
+   "xīn",
+   "yí",
+   "yì"
+  ]
+ },
+ {
+  "id": "i-大大小小",
+  "kind": "idiom",
+  "hanzi": "大大小小",
+  "pinyin": [
+   "dà",
+   "dà",
+   "xiǎo",
+   "xiǎo"
+  ]
+ },
+ {
+  "id": "i-欢天喜地",
+  "kind": "idiom",
+  "hanzi": "欢天喜地",
+  "pinyin": [
+   "huān",
+   "tiān",
+   "xǐ",
+   "dì"
+  ]
+ },
+ {
+  "id": "i-五湖四海",
+  "kind": "idiom",
+  "hanzi": "五湖四海",
+  "pinyin": [
+   "wǔ",
+   "hú",
+   "sì",
+   "hǎi"
+  ]
+ },
+ {
+  "id": "i-东张西望",
+  "kind": "idiom",
+  "hanzi": "东张西望",
+  "pinyin": [
+   "dōng",
+   "zhāng",
+   "xī",
+   "wàng"
+  ]
+ },
+ {
+  "id": "i-风和日丽",
+  "kind": "idiom",
+  "hanzi": "风和日丽",
+  "pinyin": [
+   "fēng",
+   "hé",
+   "rì",
+   "lì"
+  ]
+ },
+ {
+  "id": "i-花红柳绿",
+  "kind": "idiom",
+  "hanzi": "花红柳绿",
+  "pinyin": [
+   "huā",
+   "hóng",
+   "liǔ",
+   "lǜ"
+  ]
+ },
+ {
+  "id": "i-千山万水",
+  "kind": "idiom",
+  "hanzi": "千山万水",
+  "pinyin": [
+   "qiān",
+   "shān",
+   "wàn",
+   "shuǐ"
+  ]
+ },
+ {
+  "id": "i-日积月累",
+  "kind": "idiom",
+  "hanzi": "日积月累",
+  "pinyin": [
+   "rì",
+   "jī",
+   "yuè",
+   "lěi"
+  ]
+ }
+]
