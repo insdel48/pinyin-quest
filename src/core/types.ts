@@ -38,7 +38,8 @@ export type SceneId = "shanye" | "zhulin" | "shuixiang" | "hetang" | "xueshan" |
 export type NodeType = "battle" | "elite" | "chest" | "event" | "camp" | "boss";
 export type HintId = "slow" | "sweep" | "ghost" | "trace";
 export type BoonId = "shield" | "heal" | "calm" | "wick" | "bag" | "gold";
-export type RobeId = "zhuqing" | "yuebai";
+/** 小主角的衣服：tee = 白 T 恤牛仔裤（默认），jacket = 红色小褂 */
+export type OutfitId = "tee" | "jacket";
 
 export interface MapNode {
   id: string;
@@ -71,6 +72,6 @@ export interface Profile {
   recent: boolean[]; // 最近的作答结果（true = 自己一次答对），最多保留 12 条
   items: Record<string, ItemStat>;
   collected: string[]; // 图鉴里点亮的题目 id
-  meta: { extraHeart: boolean; extraSlot: boolean; robe: RobeId; robesOwned: RobeId[] };
+  meta: { extraHeart: boolean; extraSlot: boolean; outfit: OutfitId; outfitsOwned: OutfitId[] };
   bestLayer: number;
 }

@@ -95,6 +95,7 @@ export class Battle {
     if (!q || this.bossHpNow <= 0) {
       this.phase = "busy";
       await new Promise<void>(r => this.g.world.defeat(r));
+      this.g.world.cheer();
       return this.finish();
     }
     await this.beginItem(q.item, q.weak);
@@ -482,6 +483,7 @@ export class Battle {
     this.phase = "busy";
     await new Promise<void>(r => this.g.world.defeat(r));
     this.g.world.clearDrops();
+    this.g.world.cheer();
     await this.nextMonster();
   }
 

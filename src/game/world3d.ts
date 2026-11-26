@@ -1,6 +1,6 @@
 // 3D 战斗场景：6 个场景、主角、5 种怪物、出招和命中效果。界面层只调用 World 的方法。
 import * as THREE from "three";
-import type { MonsterKind, RobeId, SceneId } from "../core/types";
+import type { MonsterKind, OutfitId, SceneId } from "../core/types";
 
 const INK = 0x2b2a26, RED = 0xb44a36;
 export const STAGE_W = 1280, STAGE_H = 800;
@@ -307,7 +307,11 @@ export const FOES: Record<MonsterKind, FoeDef> = {
   } },
 };
 
-const ROBES: Record<RobeId, number> = { zhuqing: 0x3f6b5e, yuebai: 0xd9d6cc };
+// 小主角的衣服颜色：上衣、领口、胸前小图案
+const OUTFITS: Record<OutfitId, { shirt: number; collar: number; patch: number }> = {
+  tee: { shirt: 0xf4f1ea, collar: 0x7cc9c0, patch: 0x8cc26a },
+  jacket: { shirt: 0xc4483a, collar: 0xe3c25a, patch: 0xe3c25a },
+};
 
 // ---------- 场景控制 ----------
 export class World {
@@ -322,9 +326,15 @@ export class World {
   private foe: FoeHandle | null = null;
   private foeKind: MonsterKind | null = null;
   private hero = new THREE.Group();
-  private arm = new THREE.Group();
-  private robeMat = toon(ROBES.zhuqing);
-  private sashTail: THREE.Mesh;
+  private body = new THREE.Group();
+  private arm = new THREE.Group(); // 右手：拿毛笔出招
+  private armL = new THREE.Group(); // 左手：戴手表，比剪刀手
+  private head = new THREE.Group();
+  private vSign = new THREE.Group();
+  private shirtMat = toon(OUTFITS.tee.shirt);
+  private collarMat = toon(OUTFITS.tee.collar);
+  private patchMat = toon(OUTFITS.tee.patch);
+  private cheerK = 0;
   private shadowMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.2 });
   private foeShadow: THREE.Mesh;
   private shot = new THREE.Group();
@@ -346,17 +356,9 @@ export class World {
     this.scene.fog = new THREE.Fog(0xefe6d3, 22, 80);
     this.scene.add(this.hemi); this.dir.position.set(-6, 9, 7); this.scene.add(this.dir);
 
+    this.buildKid();
     const h = this.hero; this.scene.add(h);
-    outline(M(new THREE.CylinderGeometry(0.3, 0.82, 1.9, 24), this.robeMat, 0, 0.95, 0, h), 1.05);
-    M(new THREE.TorusGeometry(0.45, 0.07, 8, 32), toon(RED), 0, 1.32, 0, h).rotation.x = Math.PI / 2;
-    this.sashTail = M(new THREE.BoxGeometry(0.1, 0.7, 0.04), toon(RED), -0.38, 1.0, 0.25, h);
-    outline(M(new THREE.SphereGeometry(0.33, 24, 16), toon(0xf2e4cc), 0, 2.17, 0, h), 1.06);
-    outline(M(new THREE.ConeGeometry(1.0, 0.44, 40), toon(0x3a372f), 0, 2.5, 0, h), 1.04).rotation.z = -0.08;
-    M(new THREE.SphereGeometry(0.07, 8, 8), toon(INK), 0, 2.75, 0, h);
-    this.arm.position.set(0.42, 1.55, 0.15); h.add(this.arm);
-    outline(M(new THREE.CylinderGeometry(0.045, 0.05, 1.9, 8), toon(0x6b4a33), 0.25, 0.35, 0, this.arm), 1.25).rotation.z = -0.35;
-    M(new THREE.ConeGeometry(0.1, 0.4, 10), toon(INK), 0.58, 1.25, 0, this.arm).rotation.z = -0.35;
-    h.position.set(HERO_X, 0, 0.3); h.rotation.y = 0.35;
+    h.position.set(HERO_X, 0, 0.3); h.rotation.y = 0.45; h.scale.setScalar(1.12);
     M(new THREE.CircleGeometry(0.95, 32), this.shadowMat, HERO_X, 0.03, 0.3, this.scene).rotation.x = -Math.PI / 2;
     this.foeShadow = M(new THREE.CircleGeometry(1.3, 32), this.shadowMat, FOE_X, 0.03, 0.4, this.scene); this.foeShadow.rotation.x = -Math.PI / 2;
 
@@ -383,7 +385,79 @@ export class World {
     this.night = !!S.night;
   }
 
-  setRobe(robe: RobeId) { this.robeMat.color.setHex(ROBES[robe]); }
+  setOutfit(id: OutfitId) { const o = OUTFITS[id]; this.shirtMat.color.setHex(o.shirt); this.collarMat.color.setHex(o.collar); this.patchMat.color.setHex(o.patch); }
+
+  /** 小主角：大头卡通小男孩。黑色短刺头、笑着吐舌头，白 T 恤（薄荷绿领口、胸前绿色小图案），
+   *  浅蓝松紧牛仔裤（裤脚收口、腿上黄色笑脸），白运动鞋，左手腕蓝手表，右手拿大毛笔 */
+  private buildKid() {
+    const b = this.body; this.hero.add(b);
+    const skin = toon(0xffe2c6, { emissive: 0x4a2c18 }), jeans = toon(0xa8c6e4), jeansDark = toon(0x8fb0d3), hair = toon(0x22201d);
+    // 鞋和腿
+    for (const x of [-0.15, 0.15]) {
+      const shoe = outline(M(new THREE.SphereGeometry(0.17, 16, 10), toon(0xf2f1ec), x, 0.09, 0.06, b), 1.08); shoe.scale.set(1, 0.6, 1.45);
+      M(new THREE.CylinderGeometry(0.17, 0.17, 0.04, 16), toon(0x9a9a94), x, 0.02, 0.06, b).scale.set(1, 1, 1.4);
+      outline(M(new THREE.CylinderGeometry(0.13, 0.15, 0.64, 12), jeans, x, 0.5, 0, b), 1.06);
+      M(new THREE.TorusGeometry(0.125, 0.045, 8, 16), jeansDark, x, 0.22, 0, b).rotation.x = Math.PI / 2;
+    }
+    M(new THREE.CircleGeometry(0.05, 16), toon(0xf0c84a), 0.17, 0.6, 0.155, b); // 腿上的黄色笑脸
+    outline(M(new THREE.CylinderGeometry(0.33, 0.32, 0.26, 18), jeans, 0, 0.88, 0, b), 1.04);
+    M(new THREE.TorusGeometry(0.325, 0.04, 8, 24), jeansDark, 0, 1.0, 0, b).rotation.x = Math.PI / 2;
+    // 上衣
+    outline(M(new THREE.CylinderGeometry(0.29, 0.35, 0.62, 18), this.shirtMat, 0, 1.3, 0, b), 1.05);
+    M(new THREE.TorusGeometry(0.19, 0.045, 8, 20), this.collarMat, 0, 1.6, 0, b).rotation.x = Math.PI / 2;
+    M(new THREE.BoxGeometry(0.17, 0.09, 0.03), this.patchMat, 0.02, 1.38, 0.33, b);
+    for (const x of [-0.37, 0.37]) outline(M(new THREE.SphereGeometry(0.15, 14, 10), this.shirtMat, x, 1.48, 0, b), 1.06).scale.set(1, 0.9, 1);
+    // 右手：手臂 + 大毛笔
+    this.arm.position.set(0.42, 1.48, 0.02); b.add(this.arm);
+    outline(M(new THREE.CylinderGeometry(0.07, 0.065, 0.48, 10), skin, 0.05, -0.24, 0.05, this.arm), 1.1).rotation.z = 0.15;
+    M(new THREE.SphereGeometry(0.09, 12, 10), skin, 0.09, -0.5, 0.1, this.arm);
+    const brush = new THREE.Group(); brush.position.set(0.09, -0.5, 0.1); brush.rotation.z = -0.35; this.arm.add(brush);
+    outline(M(new THREE.CylinderGeometry(0.04, 0.045, 1.5, 8), toon(0x6b4a33), 0, 0.55, 0, brush), 1.25);
+    M(new THREE.ConeGeometry(0.09, 0.34, 10), toon(INK), 0, 1.45, 0, brush);
+    M(new THREE.CylinderGeometry(0.055, 0.055, 0.08, 8), toon(RED), 0, 1.25, 0, brush);
+    // 左手：手臂 + 蓝手表 + 剪刀手（平时藏着）
+    this.armL.position.set(-0.42, 1.48, 0.02); b.add(this.armL);
+    outline(M(new THREE.CylinderGeometry(0.07, 0.065, 0.48, 10), skin, -0.04, -0.24, 0.02, this.armL), 1.1).rotation.z = -0.12;
+    M(new THREE.SphereGeometry(0.09, 12, 10), skin, -0.07, -0.5, 0.03, this.armL);
+    M(new THREE.CylinderGeometry(0.085, 0.085, 0.09, 12), toon(0x6fa8dc), -0.065, -0.42, 0.03, this.armL);
+    M(new THREE.BoxGeometry(0.1, 0.08, 0.04), toon(0xdff0fb), -0.065, -0.42, 0.11, this.armL);
+    this.vSign.position.set(-0.07, -0.56, 0.03); this.armL.add(this.vSign);
+    for (const r of [0.22, -0.22]) { const f = M(new THREE.CylinderGeometry(0.025, 0.028, 0.18, 6), skin, Math.sin(r) * 0.08, -0.08, 0, this.vSign); f.rotation.z = r + Math.PI; }
+    this.vSign.visible = false;
+    // 头：大头、刺头、笑着吐舌头
+    const hd = this.head; hd.position.set(0, 2.08, 0.02); b.add(hd);
+    outline(M(new THREE.SphereGeometry(0.5, 28, 20), skin, 0, 0, 0, hd), 1.04);
+    for (const x of [-0.49, 0.49]) M(new THREE.SphereGeometry(0.1, 10, 8), skin, x, -0.04, -0.02, hd).scale.set(0.6, 1, 1);
+    // 短刺头：头发盖到额头上沿，顶上一圈短刺朝上翘
+    outline(M(new THREE.SphereGeometry(0.54, 28, 18, 0, Math.PI * 2, 0, 1.22), hair, 0, 0.03, 0, hd), 1.03);
+    // 后脑勺：头发往下多盖一截（只盖后半圈，前面留脸）
+    M(new THREE.SphereGeometry(0.535, 24, 14, Math.PI, Math.PI, 1.1, 0.75), hair, 0, 0.0, 0, hd); // phi 从 π 到 2π 是脑后（z<0）
+    const up = new THREE.Vector3(0, 1, 0);
+    for (let ring = 0; ring < 3; ring++) for (let i = 0; i < 9 - ring * 2; i++) {
+      const a = (i / (9 - ring * 2)) * Math.PI * 2 + ring, tilt = 0.25 + ring * 0.3;
+      const dir = new THREE.Vector3(Math.cos(a) * Math.sin(tilt), Math.cos(tilt), Math.sin(a) * Math.sin(tilt)).normalize();
+      const out = dir.clone().lerp(up, 0.55).normalize(); // 刺儿往上翘
+      const sp = M(new THREE.ConeGeometry(0.085, 0.3, 6), hair, dir.x * 0.58, dir.y * 0.58 + 0.03, dir.z * 0.58, hd);
+      sp.quaternion.setFromUnitVectors(up, out);
+    }
+    for (let i = 0; i < 5; i++) { const sp = M(new THREE.ConeGeometry(0.065, 0.17, 6), hair, -0.22 + i * 0.11, 0.3, 0.42, hd); sp.rotation.x = 1.25; sp.rotation.z = (i - 2) * 0.12; } // 额前一排短刘海
+    const eyeMat = new THREE.MeshBasicMaterial({ color: INK }), white = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (const x of [-0.17, 0.17]) {
+      M(new THREE.SphereGeometry(0.065, 12, 10), eyeMat, x, 0.04, 0.45, hd).scale.set(0.85, 1.15, 0.5);
+      M(new THREE.SphereGeometry(0.02, 8, 6), white, x + 0.02, 0.07, 0.48, hd);
+      M(new THREE.BoxGeometry(0.13, 0.025, 0.02), eyeMat, x, 0.15, 0.465, hd).rotation.z = x > 0 ? -0.12 : 0.12;
+      M(new THREE.CircleGeometry(0.06, 16), new THREE.MeshBasicMaterial({ color: 0xf2a0a0, transparent: true, opacity: 0.5 }), x * 1.6, -0.1, 0.42, hd).rotation.y = x > 0 ? 0.5 : -0.5;
+    }
+    M(new THREE.TorusGeometry(0.13, 0.024, 6, 16, Math.PI), eyeMat, 0, -0.13, 0.47, hd).rotation.z = Math.PI; // 咧嘴笑
+    M(new THREE.SphereGeometry(0.06, 12, 8), toon(0xe9858a), 0.03, -0.24, 0.47, hd).scale.set(1, 0.75, 0.6); // 吐舌头
+  }
+
+  /** 打败怪物：比个剪刀手、蹦一下 */
+  cheer() {
+    if (reduce) return;
+    this.vSign.visible = true;
+    this.anim(1300, k => { this.cheerK = Math.sin(Math.min(1, k * 1.4) * Math.PI / 2) * (k < 0.85 ? 1 : (1 - k) / 0.15); }, () => { this.cheerK = 0; this.vSign.visible = false; });
+  }
 
   /** 换怪物；null = 没有怪物（地图、宝箱等） */
   setMonster(kind: MonsterKind | null) {
@@ -465,14 +539,16 @@ export class World {
     this.camera.position.set(sway * 1.1, 4.1 + (reduce ? 0 : Math.sin(t * 0.13) * 0.15), 16.5);
     this.camera.lookAt(0, 1.75, 0);
     if (!reduce) {
-      this.hero.position.y = Math.sin(t * 1.6) * 0.04; this.sashTail.rotation.z = -0.25 + Math.sin(t * 2.2) * 0.12;
+      this.hero.position.y = Math.sin(t * 1.6) * 0.04 + Math.sin(this.cheerK * Math.PI) * 0.25;
+      this.head.rotation.z = Math.sin(t * 1.1) * 0.05 - this.cheerK * 0.12;
+      this.armL.rotation.z = Math.sin(t * 1.6) * 0.05 - this.cheerK * 2.5; this.armL.rotation.x = -this.cheerK * 0.3;
       this.ctx.mists.forEach(p => { p.position.x = p.userData.x0 + Math.sin(t * 0.08 * p.userData.sp * 3) * 3; });
     }
     this.ctx.tick.forEach(f => f(t, dt, 0));
     this.anims = this.anims.filter(a => { const k = Math.min(1, (now - a.start) / a.dur); a.fn(k); if (k >= 1) { a.done?.(); return false; } return true; });
 
     // 主角被咬：闪一下
-    if (this.heroFlash > 0) { this.heroFlash = Math.max(0, this.heroFlash - dt * 2.5); this.robeMat.emissive.setHex(this.heroFlash > 0.5 ? 0xb44a36 : 0x000000); this.hero.position.x = HERO_X - Math.sin(this.heroFlash * 20) * 0.08 * this.heroFlash; }
+    if (this.heroFlash > 0) { this.heroFlash = Math.max(0, this.heroFlash - dt * 2.5); this.shirtMat.emissive.setHex(this.heroFlash > 0.5 ? 0xb44a36 : 0x000000); this.hero.position.x = HERO_X - Math.sin(this.heroFlash * 20) * 0.08 * this.heroFlash; }
 
     if (this.foeGroup && this.foe) {
       const hitK = this.hitAt > 0 ? Math.max(0, 1 - (now - this.hitAt) / 700) : 0;

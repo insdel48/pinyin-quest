@@ -5,7 +5,7 @@ import { compose } from "../core/pinyin";
 import { buy, loadProfile, saveProfile, SHOP } from "../core/progress";
 import { makeRng, pick, shuffle } from "../core/rng";
 import { campHeal, chestChoices, endBattle, finishRun, moveTo, newRun, takeChoice, type RunState } from "../core/run";
-import type { HintId, Item, MapNode, Profile, RobeId, Syllable } from "../core/types";
+import type { HintId, Item, MapNode, OutfitId, Profile, Syllable } from "../core/types";
 import { hasVoice, say, sfx, unlockAudio, wait } from "./audio";
 import { Battle } from "./battle";
 import { Tutorial } from "./tutorial";
@@ -93,7 +93,7 @@ export class Game {
     this.stage = root.querySelector("#stage")!;
     this.screen = root.querySelector("#screen")!;
     this.world = new World(root.querySelector("#gl")!);
-    this.world.setRobe(this.profile.meta.robe);
+    this.world.setOutfit(this.profile.meta.outfit);
     this.world.start();
     this.hud = new Hud(this);
     this.stage.append(this.hud.root);
@@ -239,7 +239,7 @@ export class Game {
       if (can) this.once(b, () => this.enter(n)); else b.disabled = true;
       grid.append(b);
     }
-    if (current) { const [x, y] = pos(current); const hat = h("div", "hatmark", ICON.hat); hat.style.left = `${x}px`; hat.style.top = `${y}px`; grid.append(hat); }
+    if (current) { const [x, y] = pos(current); const hat = h("div", "hatmark", ICON.kid); hat.style.left = `${x}px`; hat.style.top = `${y}px`; grid.append(hat); }
     wrap.append(grid);
     const home = h("button", "btn small homebtn", `${ICON.home}<span>回首页</span>`); home.addEventListener("click", () => this.home());
     this.show(wrap, home);
@@ -455,16 +455,17 @@ export class Game {
     row.append(again, back);
     card.append(row);
     this.show(card, h("div", "pill stars home-stars", `${ICON.star}<span>${this.profile.stars}</span>`));
-    sfx("chime"); if (won) setTimeout(() => sfx("coin"), 300);
+    sfx("chime"); if (won) { setTimeout(() => sfx("coin"), 300); this.world.cheer(); }
     void say(won ? "v:win" : "v:lose");
   }
 
   // ---------- 换礼物（用星星） ----------
   private shop() {
-    const robe = (id: RobeId) => `<svg viewBox="0 0 64 64" width="130" height="130" fill="none" stroke="#2b2a26" stroke-width="2.4" stroke-linejoin="round"><path d="M24 22h16l10 36H14z" fill="${id === "zhuqing" ? "#3f6b5e" : "#d9d6cc"}"/><rect x="18" y="34" width="28" height="4" fill="#b44a36"/><circle cx="32" cy="16" r="7" fill="#f2e4cc"/><path d="M8 14L32 4l24 10c-14 3-34 3-48 0z" fill="#3a372f"/></svg>`;
+    // 小主角穿这身衣服的样子
+    const look = (id: OutfitId) => { const red = id === "jacket"; return `<svg viewBox="0 0 64 64" width="130" height="130" fill="none" stroke="#2b2a26" stroke-width="2.2" stroke-linejoin="round"><path d="M22 36h20l2 14H20z" fill="#a8c6e4"/><path d="M22 50v8M42 50v8" stroke-width="6" stroke="#a8c6e4"/><path d="M20 24h24l4 14H16z" fill="${red ? "#c4483a" : "#f4f1ea"}"/><path d="M27 24q5 4 10 0" stroke="${red ? "#e3c25a" : "#7cc9c0"}" stroke-width="3"/>${red ? '<circle cx="32" cy="30" r="1.6" fill="#e3c25a"/><circle cx="32" cy="35" r="1.6" fill="#e3c25a"/>' : '<rect x="29" y="28" width="7" height="4" rx="1" fill="#8cc26a" stroke="none"/>'}<circle cx="32" cy="14" r="9" fill="#f0cfae"/><path d="M23 13c0-6 4-9 9-9s9 3 9 9l-3-4-2 3-2-4-2 3-2-4-2 4-2-3z" fill="#22201d"/><path d="M28 18q4 3 8 0"/></svg>`; };
     const m = this.profile.meta;
     const wares = [
-      { id: "robe-yuebai" as const, name: "白衣裳", desc: "换一身新衣服", pv: robe("yuebai"), cost: SHOP[0].cost, owned: m.robesOwned.includes("yuebai") },
+      { id: "outfit-jacket" as const, name: "红色小褂", desc: "换一身新衣服", pv: look("jacket"), cost: SHOP[0].cost, owned: m.outfitsOwned.includes("jacket") },
       { id: "extra-heart" as const, name: "多一颗心", desc: "开局多一颗心", pv: `<span class="pv-ic red">${ICON.heart}</span>`, cost: SHOP[1].cost, owned: m.extraHeart },
       { id: "extra-slot" as const, name: "多一格道具", desc: "多带一个道具", pv: `<span class="pv-ic">${BOON_INFO.bag.icon}</span>`, cost: SHOP[2].cost, owned: m.extraSlot },
     ];
@@ -472,21 +473,21 @@ export class Game {
     const stars = h("div", "pill stars home-stars", `${ICON.star}<span>${this.profile.stars}</span>`);
     const row = h("div", "shop");
     for (const w of wares) {
-      const isRobe = w.id === "robe-yuebai";
+      const isRobe = w.id === "outfit-jacket";
       const card = h("div", "panel ware" + (w.owned && !isRobe ? " owned" : ""), `<div class="pv">${w.pv}</div><b>${w.name}</b><span>${w.desc}</span>`);
-      const label = !w.owned ? `<span class="cost">${ICON.star}${w.cost}</span>` : isRobe ? (m.robe === "yuebai" ? "换回绿衣裳" : "穿上白衣裳") : "已拿到";
+      const label = !w.owned ? `<span class="cost">${ICON.star}${w.cost}</span>` : isRobe ? (m.outfit === "jacket" ? "换回白 T 恤" : "穿上红色小褂") : "已拿到";
       const btn = h("button", "btn small", label);
       btn.addEventListener("click", () => {
-        if (w.owned) { if (isRobe) { this.wear(m.robe === "yuebai" ? "zhuqing" : "yuebai"); sfx("snap"); this.shop(); } return; }
+        if (w.owned) { if (isRobe) { this.wear(m.outfit === "jacket" ? "tee" : "jacket"); sfx("snap"); this.shop(); } return; }
         if (!buy(this.profile, w.id)) { sfx("nope"); this.toast(`还差 ${w.cost - this.profile.stars} 颗星`); return; }
-        sfx("coin"); if (isRobe) this.wear("yuebai"); this.save(); this.shop();
+        sfx("coin"); if (isRobe) this.wear("jacket"); this.save(); this.shop();
       });
       card.append(btn); row.append(card);
     }
     this.show(back, stars, row);
   }
 
-  private wear(id: RobeId) { this.profile.meta.robe = id; this.world.setRobe(id); this.save(); }
+  private wear(id: OutfitId) { this.profile.meta.outfit = id; this.world.setOutfit(id); this.save(); }
 
   // ---------- 声音本 ----------
   private book(tab: "char" | "word" | "idiom" = "char") {
