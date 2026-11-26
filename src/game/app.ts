@@ -8,12 +8,13 @@ import { campHeal, chestChoices, endBattle, finishRun, moveTo, newRun, takeChoic
 import type { HintId, Item, MapNode, Profile, RobeId, Syllable } from "../core/types";
 import { hasVoice, say, sfx, unlockAudio, wait } from "./audio";
 import { Battle } from "./battle";
+import { Tutorial } from "./tutorial";
 import { picSvg } from "./pics";
 import { BOON_INFO, h, HINT_INFO, ICON, NODE_INFO } from "./ui";
 import { STAGE_H, STAGE_W, World } from "./world3d";
 
-// NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点
-const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path";
+// NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点；TIPS_KEY：教过的东西（新手关、道具）
+const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips";
 const store = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* 存不了就算了 */ } },
@@ -78,6 +79,10 @@ export class Game {
   private battle: Battle | null = null;
   private path: string[] = [];
   private collectedAtStart = 0;
+  private tutorial: Tutorial | null = null;
+  /** 教过的东西：tutorial = 新手关走完或跳过，hint = 第一场战斗里教过道具 */
+  tips: { tutorial?: boolean; hint?: boolean } = (() => { try { return JSON.parse(store.get(TIPS_KEY) ?? "{}"); } catch { return {}; } })();
+  saveTips() { store.set(TIPS_KEY, JSON.stringify(this.tips)); }
 
   constructor(root: HTMLElement) {
     this.items = (itemsData as Item[]).filter(i => hasVoice("i:" + i.id)); // 读音没核对通过的题不出、不进声音本
@@ -120,7 +125,7 @@ export class Game {
     this.toasts.append(t); setTimeout(() => t.remove(), 1900);
   }
 
-  private show(...els: HTMLElement[]) { this.battle?.destroy(); this.battle = null; this.hud.setHint(null); this.screen.replaceChildren(...els); }
+  private show(...els: HTMLElement[]) { this.battle?.destroy(); this.battle = null; this.tutorial?.destroy(); this.tutorial = null; this.hud.setHint(null); this.screen.replaceChildren(...els); }
   private setNight() { this.stage.classList.toggle("night", this.world.night); }
   /** 点一下就锁住，防止孩子连点 */
   private once(b: HTMLButtonElement, fn: () => void) { b.addEventListener("click", () => { if (b.dataset.done) return; b.dataset.done = "1"; fn(); }); }
@@ -142,13 +147,15 @@ export class Game {
           return this.resume();
         } catch { store.del(RUN_KEY); }
       }
+      if (!this.tips.tutorial) return this.learn(() => this.startRun());
       this.startRun();
     });
     const actions = h("div", "home-actions"); actions.append(go);
     const shop = h("button", "btn", `${ICON.star}<span>换礼物</span>`); shop.addEventListener("click", () => this.shop());
     const book = h("button", "btn", `${BOOK_ICON}<span>声音本</span>`); book.addEventListener("click", () => this.book());
     actions.append(shop, book);
-    const els: HTMLElement[] = [title, actions, h("div", "pill stars home-stars", `${ICON.star}<span>${this.profile.stars}</span>`)];
+    const how = h("button", "btn small howto", `${ICON.finger}<span>怎么玩</span>`); how.addEventListener("click", () => { void tryFullscreen(); this.learn(() => this.home()); });
+    const els: HTMLElement[] = [title, actions, how, h("div", "pill stars home-stars", `${ICON.star}<span>${this.profile.stars}</span>`)];
     if (saved) {
       // 从头玩要点两次，免得孩子误点把这一局清掉
       const fresh = h("button", "btn small fresh", "从头玩");
@@ -159,6 +166,30 @@ export class Game {
       els.push(fresh);
     }
     this.show(...els);
+  }
+
+  /** 新手关；走完或跳过都记下来，以后不再自动出现 */
+  private learn(next: () => void) {
+    this.show();
+    this.hud.root.hidden = true;
+    this.tutorial = new Tutorial(this, () => { this.tutorial = null; this.tips.tutorial = true; this.saveTips(); next(); });
+  }
+
+  /** 第一场战斗里，手指指着道具按钮教一次 */
+  teachHint(): boolean {
+    if (this.tips.hint || !this.run.hints.length) return false;
+    const btn = this.hud.root.querySelector<HTMLElement>(".items .it:not(.empty)");
+    if (!btn) return false;
+    this.tips.hint = true; this.saveTips();
+    const r = btn.getBoundingClientRect();
+    const p = this.toStage({ clientX: r.left + r.width / 2, clientY: r.bottom });
+    const f = h("div", "tfinger pulse up", ICON.finger);
+    f.style.transform = `translate(${p.x - 18}px, ${p.y}px)`;
+    this.stage.append(f);
+    btn.classList.add("glow");
+    void say("v:t-hint");
+    setTimeout(() => { f.remove(); btn.classList.remove("glow"); }, 4500);
+    return true;
   }
 
   private startRun() {

@@ -48,7 +48,8 @@ export class Battle {
   private tutorial: boolean;
 
   constructor(private g: Game, private kind: Kind, private onEnd: () => void) {
-    this.tutorial = g.profile.runsCompleted === 0 && Object.keys(g.profile.items).length < 2;
+    // 跳过了新手关的孩子，第一道题还是给最基本的手指提示
+    this.tutorial = !g.tips.tutorial && g.profile.runsCompleted === 0 && Object.keys(g.profile.items).length < 2;
     this.strip.append(this.stripInner);
     this.root.append(this.strip, this.seals, this.bossHp, this.weakTag, this.slotsEl, this.hand, this.bubble);
     this.bossHp.innerHTML = "<i></i>";
@@ -115,6 +116,7 @@ export class Battle {
     await this.talk(() => say("i:" + item.id));
     if (item.kind !== "char") { await wait(250); await this.sayCurrent(); }
     if (this.tutorial && this.si === 0 && this.phase === "spell" && this.slots.every(s => s === null)) { await wait(300); await say("v:spell"); }
+    else if (this.phase === "spell") { await wait(400); this.g.teachHint(); }
   }
 
   private beginSyllable() {
