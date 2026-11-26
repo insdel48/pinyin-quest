@@ -9,6 +9,7 @@
   ~/.local/share/uv/tools/mlx-audio/bin/python tools/tts_batch.py [--only 键前缀] [--force]
 需要先跑 tools/audio_jobs.py，并有 tools/.cache/pydict.json（字→读音表，由 pypinyin 导出）。
 """
+import difflib
 import json
 import pathlib
 import re
@@ -140,7 +141,13 @@ for n, j in enumerate(todo, 1):
                 log.append("读得太长")
                 continue
             wav, text = listen(audio, sr, "plain.wav")
-        if heard_ok(text, j["expect"], j.get("toneless", False)):
+        if j.get("similar"):
+            want = "".join(re.findall(r"[\u4e00-\u9fff]", j["similar"]))
+            got = "".join(re.findall(r"[\u4e00-\u9fff]", text))
+            passed = difflib.SequenceMatcher(None, want, got).ratio() >= 0.85
+        else:
+            passed = heard_ok(text, j["expect"], j.get("toneless", False))
+        if passed:
             to_mp3(wav, mp3_dir / j["file"])
             ok = True
             break

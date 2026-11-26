@@ -7,10 +7,13 @@ import type { HintId, Item, MonsterKind, Syllable, Tone } from "../core/types";
 import { hasVoice, preload, say, sfx, stopVoice, wait } from "./audio";
 import type { Game } from "./app";
 import { picSvg } from "./pics";
-import { h, ICON, mouthSvg, TONE_PATH } from "./ui";
+import { h, HINT_INFO, ICON, mouthSvg, TONE_PATH } from "./ui";
 
 type Kind = "battle" | "elite" | "boss";
 type Phase = "intro" | "spell" | "tone" | "busy" | "done";
+type Card = { text: string; used: boolean; gone: boolean; el: HTMLDivElement };
+
+const CHECK_DELAY = 700; // 放满格子后等一会儿再判，期间还能点格子把卡拿回来
 
 export class Battle {
   private root = h("div", "battle");
@@ -25,7 +28,7 @@ export class Battle {
   private zone: HTMLDivElement | null = null;
   private stroke: SVGSVGElement | null = null;
   private guide: SVGSVGElement | null = null;
-  private extras: HTMLElement[] = [];
+  private extras: Element[] = [];
 
   private monsters: MonsterKind[] = [];
   private bossQueue: { item: Item; weak: boolean }[] = [];
@@ -33,28 +36,31 @@ export class Battle {
   private item!: Item; private weak = false;
   private syls: Syllable[] = []; private si = 0;
   private slots: (string | null)[] = [];
-  private cards: { text: string; used: boolean; gone: boolean; el: HTMLDivElement }[] = [];
+  private cards: Card[] = [];
   private distance = 2; private total = 2;
   private phase: Phase = "intro";
   private failed = false; private assisted = false; private wrongCalled = false;
+  private teaching = false;
   private pendingTrace = false;
+  private ghostAt: number | null = null;
+  private checkTimer = 0;
   private alive = true;
   private tutorial: boolean;
 
   constructor(private g: Game, private kind: Kind, private onEnd: () => void) {
     this.tutorial = g.profile.runsCompleted === 0 && Object.keys(g.profile.items).length < 2;
     this.strip.append(this.stripInner);
-    this.root.append(this.strip, this.weakTag, this.seals, this.bossHp, this.bubble, this.slotsEl, this.hand);
+    this.root.append(this.strip, this.seals, this.bossHp, this.weakTag, this.slotsEl, this.hand, this.bubble);
     this.bossHp.innerHTML = "<i></i>";
     this.bossHp.hidden = true;
     this.bubble.addEventListener("click", () => this.replay());
     g.screen.replaceChildren(this.root);
-    g.hud.onHint = id => this.useHint(id);
+    g.hud.setHint(id => this.useHint(id));
     requestAnimationFrame(() => this.track());
     void this.start();
   }
 
-  destroy() { this.alive = false; this.g.hud.onHint = null; stopVoice(); }
+  destroy() { this.alive = false; clearTimeout(this.checkTimer); this.g.hud.setHint(null); stopVoice(); }
 
   // ---------- 流程 ----------
   private async start() {
@@ -97,7 +103,7 @@ export class Battle {
     this.item = item; this.weak = weak;
     this.syls = itemSyllables(item); this.si = 0;
     this.failed = this.assisted = this.wrongCalled = false;
-    this.weakTag.innerHTML = weak ? "<span>弱点 · 打中伤害翻倍</span>" : "";
+    this.weakTag.innerHTML = weak ? "<span>大招题！打中掉两格血</span>" : "";
     this.stripInner.innerHTML = [...item.hanzi].map((c, i) => `<div class="ch ${i === 0 ? "cur" : "todo"}"><span class="p hide"></span><span class="h">${c}</span></div>`).join("");
     this.seals.innerHTML = this.syls.map(() => "<i></i>").join("");
     const pic = picSvg(item.pic, 68);
@@ -108,10 +114,12 @@ export class Battle {
     this.beginSyllable();
     await this.talk(() => say("i:" + item.id));
     if (item.kind !== "char") { await wait(250); await this.sayCurrent(); }
+    if (this.tutorial && this.si === 0 && this.phase === "spell" && this.slots.every(s => s === null)) { await wait(300); await say("v:spell"); }
   }
 
   private beginSyllable() {
     const syl = this.syls[this.si];
+    this.teaching = false;
     this.total = this.distance = monsterDistance(this.g.run);
     this.g.world.setApproach(this.distance, this.total);
     this.slots = syl.parts.map(() => null);
@@ -120,26 +128,29 @@ export class Battle {
     this.cards = texts.map(text => {
       const el = h("div", "card", text);
       el.setAttribute("role", "button"); el.setAttribute("aria-label", `卡片 ${text}`);
-      const c = { text, used: false, gone: false, el };
+      const c: Card = { text, used: false, gone: false, el };
       this.bindCard(c);
       this.hand.append(el);
       return c;
     });
-    [...this.stripInner.children].forEach((el, i) => { el.classList.toggle("cur", i === this.si); el.classList.toggle("todo", i > this.si); });
-    this.renderSlots();
+    [...this.stripInner.children].forEach((el, i) => {
+      el.classList.toggle("cur", i === this.si); el.classList.toggle("todo", i > this.si);
+      if (i === this.si && this.si > 0) { el.classList.remove("bounce"); void (el as HTMLElement).offsetWidth; el.classList.add("bounce"); }
+    });
     this.clearExtras();
+    this.renderSlots();
     this.phase = "spell";
     if (this.tutorial && this.si === 0) void this.demoTap();
   }
 
   /** 读当前这个音（词语里逐字读；没有单字读音就读整个词） */
-  private sayCurrent() {
+  private sayCurrent(rate = 1) {
     const syl = this.syls[this.si];
-    return this.talk(() => hasVoice("s:" + syl.written) ? say("s:" + syl.written) : say("i:" + this.item.id));
+    return this.talk(() => hasVoice("s:" + syl.written) ? say("s:" + syl.written, rate) : say("i:" + this.item.id, rate));
   }
 
   private replay() {
-    if (this.phase === "intro" || this.phase === "done") return;
+    if (this.phase === "intro" || this.phase === "done" || !this.item) return;
     void this.talk(async () => { await say("i:" + this.item.id); if (this.item.kind !== "char") { await wait(200); await this.sayCurrent(); } });
   }
 
@@ -149,31 +160,32 @@ export class Battle {
   }
 
   // ---------- 拼音格和卡片 ----------
-  private renderSlots(state: Record<number, string> = {}) {
+  /** state：每格的样子，ok / bad / hl / toned / ghost:字母 */
+  private renderSlots(state: Record<number, string> = this.ghostState()) {
     const syl = this.syls[this.si];
     this.slotsEl.replaceChildren();
     syl.parts.forEach((part, i) => {
       if (i) this.slotsEl.append(h("span", "plus", "+"));
       const w = 72 + 30 * Math.max(part.length, (this.slots[i] ?? "").length, 1);
-      const last = i === syl.parts.length - 1;
+      const st = state[i] ?? "";
+      const toned = st === "toned";
       const val = this.slots[i];
-      const toned = last && state[i] === "toned";
       const text = toned ? syl.lastToned : val;
-      const cls = state[i] && !state[i].startsWith("ghost:") && state[i] !== "toned" ? " " + state[i] : "";
-      const el = h("div", "slot" + cls + (toned ? " ok" : ""));
+      const ghost = !text && st.startsWith("ghost:") ? st.slice(6) : "";
+      const el = h("div", "slot" + (st && !st.startsWith("ghost:") && !toned ? " " + st : "") + (toned ? " ok" : ""));
       el.dataset.i = String(i);
       const lines = [26, 56, 86, 116].map(y => `<line class="ln" x1="10" x2="${w - 10}" y1="${y}" y2="${y}"/>`).join("");
-      el.innerHTML = `<svg width="${w}" height="132" viewBox="0 0 ${w} 132"><rect class="bgr" x="1" y="1" width="${w - 2}" height="130" rx="6"/>${lines}${text ? `<text class="${toned ? "toned placed" : "placed"}" x="${w / 2}" y="86">${text}</text>` : ""}${!text && state[i]?.startsWith("ghost:") ? `<text class="ghost" x="${w / 2}" y="86">${state[i].slice(6)}</text>` : ""}</svg>`;
+      el.innerHTML = `<svg width="${w}" height="132" viewBox="0 0 ${w} 132"><rect class="bgr" x="1" y="1" width="${w - 2}" height="130" rx="6"/>${lines}${text ? `<text class="${toned ? "toned placed" : "placed"}" x="${w / 2}" y="86">${text}</text>` : ""}${ghost ? `<text class="ghost" x="${w / 2}" y="86">${ghost}</text>` : ""}</svg>`;
       el.addEventListener("click", () => this.tapSlot(i));
       this.slotsEl.append(el);
     });
   }
-  private ghostAt: number | null = null;
 
-  private bindCard(c: { text: string; used: boolean; gone: boolean; el: HTMLDivElement }) {
+  private bindCard(c: Card) {
     let start: { x: number; y: number } | null = null, ghost: HTMLDivElement | null = null, moved = false;
+    const s = () => this.g.scale;
     c.el.addEventListener("pointerdown", e => {
-      if (this.phase !== "spell" || c.used) return;
+      if (this.phase !== "spell" || c.used || c.gone) return;
       start = { x: e.clientX, y: e.clientY }; moved = false;
       try { c.el.setPointerCapture(e.pointerId); } catch { /* 有的浏览器不支持 */ }
     });
@@ -182,26 +194,40 @@ export class Battle {
       if (!moved && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 12) {
         moved = true;
         ghost = c.el.cloneNode(true) as HTMLDivElement; ghost.classList.add("drag");
-        const s = this.g.scale; ghost.style.width = `${100 * s}px`; ghost.style.height = `${116 * s}px`; ghost.style.fontSize = `${44 * s}px`;
+        ghost.style.width = `${100 * s()}px`; ghost.style.height = `${116 * s()}px`; ghost.style.fontSize = `${44 * s()}px`;
         document.body.append(ghost);
       }
-      if (ghost) { const s = this.g.scale; ghost.style.left = `${e.clientX - 50 * s}px`; ghost.style.top = `${e.clientY - 58 * s}px`; }
+      // 卡片显示在手指上方，不被手指挡住
+      if (ghost) { ghost.style.left = `${e.clientX - 50 * s()}px`; ghost.style.top = `${e.clientY - 150 * s()}px`; }
     });
     const up = (e: PointerEvent) => {
       if (!start) return;
       start = null;
       ghost?.remove(); ghost = null;
-      if (this.phase !== "spell" || c.used) return;
+      if (this.phase !== "spell" || c.used || c.gone) return;
       if (!moved) return this.place(c, null);
-      const hit = document.elementsFromPoint(e.clientX, e.clientY).find(el => (el as HTMLElement).dataset?.i !== undefined && el.classList.contains("slot")) as HTMLElement | undefined;
-      if (hit) this.place(c, Number(hit.dataset.i));
+      const target = this.nearestSlot(e);
+      if (target !== null) this.place(c, target); else sfx("back");
     };
     c.el.addEventListener("pointerup", up);
     c.el.addEventListener("pointercancel", () => { start = null; ghost?.remove(); ghost = null; });
   }
 
-  private place(c: { text: string; used: boolean; el: HTMLDivElement }, at: number | null) {
-    let i = at ?? this.slots.findIndex(s => s === null);
+  /** 拖着的卡片（在手指上方）离哪个格子最近；离得太远返回 null */
+  private nearestSlot(e: PointerEvent): number | null {
+    const p = this.g.toStage(e); p.y -= 92; // 卡片中心在手指上方
+    let best: number | null = null, bestD = 110;
+    this.slotsEl.querySelectorAll<HTMLElement>(".slot").forEach(el => {
+      const r = el.getBoundingClientRect();
+      const c = this.g.toStage({ clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 });
+      const d = Math.hypot(p.x - c.x, p.y - c.y);
+      if (d < bestD) { bestD = d; best = Number(el.dataset.i); }
+    });
+    return best;
+  }
+
+  private place(c: Card, at: number | null) {
+    const i = at ?? this.slots.findIndex(s => s === null);
     if (i < 0) return;
     const prev = this.slots[i];
     if (prev !== null) this.returnCard(prev);
@@ -209,15 +235,21 @@ export class Battle {
     if (this.ghostAt === i) this.ghostAt = null;
     sfx("snap");
     if (hasVoice("p:" + c.text)) void say("p:" + c.text);
-    this.renderSlots(this.ghostState());
+    this.renderSlots();
     this.hideDemo();
-    if (this.slots.every(s => s !== null)) { this.phase = "busy"; setTimeout(() => void this.checkParts(), 350); }
+    this.scheduleCheck();
+  }
+
+  private scheduleCheck() {
+    clearTimeout(this.checkTimer);
+    if (this.slots.every(s => s !== null)) this.checkTimer = window.setTimeout(() => { if (this.phase === "spell") { this.phase = "busy"; void this.checkParts(); } }, CHECK_DELAY);
   }
 
   private tapSlot(i: number) {
     if (this.phase !== "spell" || this.slots[i] === null) return;
+    clearTimeout(this.checkTimer);
     this.returnCard(this.slots[i]!); this.slots[i] = null; sfx("back");
-    this.renderSlots(this.ghostState());
+    this.renderSlots();
   }
 
   private returnCard(text: string) {
@@ -230,46 +262,55 @@ export class Battle {
     return this.ghostAt !== null && this.slots[this.ghostAt] === null ? { [this.ghostAt]: "ghost:" + syl.parts[this.ghostAt] } : {};
   }
 
+  private allState(v: string, lastToned = false): Record<number, string> {
+    const st: Record<number, string> = {};
+    this.syls[this.si].parts.forEach((_, i) => { st[i] = v; });
+    if (lastToned) st[this.syls[this.si].parts.length - 1] = "toned";
+    return st;
+  }
+
   // ---------- 判断 ----------
   private async checkParts() {
     const syl = this.syls[this.si];
     const chosen = this.slots as string[];
     if (chosen.every((p, i) => p === syl.parts[i])) {
-      const ok: Record<number, string> = {}; chosen.forEach((_, i) => { ok[i] = "ok"; });
-      this.renderSlots(ok);
+      this.renderSlots(this.allState("ok"));
       sfx("chime");
       await wait(300);
       return this.enterTone();
     }
-    // 拼错了：读出孩子拼的这个音，墨打偏
+    // 拼错了：对的格子亮一下，错的抖一下；读出孩子拼的这个音，墨打偏，再读一遍正确的
     const spelled = compose(chosen, syl.tone);
-    const bad: Record<number, string> = {};
-    chosen.forEach((p, i) => { if (p !== syl.parts[i]) bad[i] = "bad"; });
-    this.renderSlots(bad);
+    const st: Record<number, string> = {};
+    chosen.forEach((p, i) => { st[i] = p === syl.parts[i] ? "ok" : "bad"; });
+    this.renderSlots(st);
     sfx("nope");
     this.g.world.attack(false, () => sfx("miss"));
     if (spelled && spelled !== syl.written) {
       this.echo(spelled, true);
       if (hasVoice("s:" + spelled)) await say("s:" + spelled); else await wait(500);
     } else await wait(500);
-    await wait(350);
+    await wait(300);
     chosen.forEach((p, i) => { if (p !== syl.parts[i]) { this.returnCard(p); this.slots[i] = null; } });
-    this.renderSlots(this.ghostState());
+    this.renderSlots();
     const bitten = await this.wrongStep();
-    if (!bitten && this.alive) this.phase = "spell";
+    if (!bitten && this.alive) { this.phase = "spell"; await wait(200); void this.sayCurrent(); }
   }
 
   private async enterTone() {
     if (!this.alive) return;
     this.phase = "tone";
+    const syl = this.syls[this.si];
+    const neutral = syl.tone === 0;
     const zone = h("div", "tonezone");
-    zone.innerHTML = `<div class="tip">听一听，用手指划出声调</div>${this.tutorial ? `<span class="finger">${ICON.finger}</span>` : ""}`;
+    const tip = neutral ? "这是轻声，点一下就行" : "听一听，划出声调：ˉ ˊ ˇ ˋ";
+    zone.innerHTML = `<div class="tip">${tip}</div>${this.tutorial || neutral ? `<span class="finger">${ICON.finger}</span>` : ""}`;
     const stroke = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     stroke.setAttribute("class", "stroke"); stroke.setAttribute("viewBox", "0 0 1280 800");
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path"); stroke.append(path);
-    this.root.append(zone, stroke);
+    this.root.insertBefore(zone, this.bubble); this.root.insertBefore(stroke, this.bubble); // 喇叭气泡保持在最上层
     this.zone = zone; this.stroke = stroke;
-    if (this.pendingTrace) this.showGuide();
+    if (this.pendingTrace || this.teaching) this.showGuide();
     let pts: { x: number; y: number; t: number }[] = [];
     zone.addEventListener("pointerdown", e => {
       if (this.phase !== "tone") return;
@@ -289,12 +330,19 @@ export class Battle {
       pts = [];
       void this.onTone(tone, path);
     });
+    // 进入划声调时再读一遍，孩子听着声调来划（教的时候 teach() 已经读过了）
+    if (this.teaching) return;
+    await wait(150);
+    if (this.tutorial || neutral) await say(neutral ? "v:neutral" : "v:tone");
+    if (this.phase === "tone") await this.sayCurrent();
   }
 
   private async onTone(tone: Tone | null, path: SVGPathElement) {
     const syl = this.syls[this.si];
     if (tone === null) {
       sfx("nope"); this.zone?.classList.remove("again"); void this.zone?.offsetWidth; this.zone?.classList.add("again");
+      const tip = this.zone?.querySelector(".tip"); if (tip) tip.textContent = "再划大一点";
+      void say("v:again");
       setTimeout(() => path.setAttribute("d", ""), 400);
       return;
     }
@@ -304,12 +352,11 @@ export class Battle {
       path.setAttribute("d", "");
       this.closeTone();
       this.drawTrail(tone);
-      const ok: Record<number, string> = {}; syl.parts.forEach((_, i) => { ok[i] = "ok"; }); ok[syl.parts.length - 1] = "toned";
-      this.renderSlots(ok);
+      this.renderSlots(this.allState("ok", true));
       await wait(450);
       return this.hit();
     }
-    // 声调错了：读出这个调
+    // 声调错了：读出这个调，再读一遍正确的
     this.phase = "busy";
     const spelled = compose(syl.parts, tone);
     this.g.world.attack(false, () => sfx("miss"));
@@ -318,8 +365,9 @@ export class Battle {
       if (hasVoice("s:" + spelled)) await say("s:" + spelled); else await wait(500);
     }
     setTimeout(() => path.setAttribute("d", ""), 200);
+    if (this.teaching) { await wait(200); await this.sayCurrent(); this.phase = "tone"; return; } // 教的时候划错不再扣
     const bitten = await this.wrongStep();
-    if (!bitten && this.alive) this.phase = "tone";
+    if (!bitten && this.alive) { this.phase = "tone"; await wait(200); void this.sayCurrent(); }
   }
 
   private closeTone() { this.zone?.remove(); this.stroke?.remove(); this.guide?.remove(); this.zone = this.stroke = this.guide = null; this.pendingTrace = false; }
@@ -328,16 +376,17 @@ export class Battle {
     const t = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     t.setAttribute("class", "trail"); t.setAttribute("viewBox", "0 0 340 64");
     t.innerHTML = `<path d="${TONE_PATH[tone]}"/>`;
-    this.root.append(t); this.extras.push(t as unknown as HTMLElement);
+    this.root.append(t); this.extras.push(t);
     setTimeout(() => t.remove(), 1400);
   }
 
   private showGuide() {
+    this.guide?.remove();
     const syl = this.syls[this.si];
     const t = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     t.setAttribute("class", "trail guide"); t.setAttribute("viewBox", "0 0 340 64");
-    t.innerHTML = `<path d="${TONE_PATH[syl.tone]}"/>`;
-    this.root.append(t); this.guide = t;
+    t.innerHTML = syl.tone === 0 ? `<circle cx="170" cy="32" r="14"/>` : `<path d="${TONE_PATH[syl.tone]}"/>`;
+    this.root.insertBefore(t, this.zone ?? this.bubble); this.guide = t;
   }
 
   /** 怪物往前走一步；走到面前就咬一口（返回 true），然后把这个音教一遍 */
@@ -348,44 +397,48 @@ export class Battle {
     if (this.distance > 0) { await wait(300); return false; }
     this.phase = "busy";
     this.closeTone();
+    let blocked = false;
     await new Promise<void>(res => this.g.world.lunge(() => {
       sfx("bite");
+      let hurt = false;
       if (!this.wrongCalled) {
         this.wrongCalled = true; this.failed = true;
         const r = onAnswer(this.g.run, this.item.id, "wrong", this.g.rng);
         recordAnswer(this.g.profile, this.item.id, "wrong", this.g.run.runNo);
         this.g.hud.update(r.heartLost);
         this.g.save();
+        hurt = r.heartLost; blocked = !r.heartLost && this.g.run.boons.includes("shield");
       }
-      res();
+      setTimeout(res, 0);
+      return hurt;
     }));
+    if (blocked) { sfx("chime"); this.g.toast("竹盾挡住啦！"); void say("v:shield"); }
     if (this.g.run.over === "lost") { this.phase = "done"; await wait(900); this.alive = false; this.g.runLost(); return true; }
-    await wait(600);
+    await wait(700);
     await this.teach();
     return true;
   }
 
-  /** 咬过之后，把这个音慢慢拼给孩子看，然后照样出招 */
+  /** 咬过之后，把卡片一张张放好给孩子看，最后照着虚线自己划声调 */
   private async teach() {
     const syl = this.syls[this.si];
-    this.phase = "busy";
+    this.phase = "busy"; this.teaching = true;
     this.distance = this.total; this.g.world.setApproach(this.distance, this.total);
+    this.g.toast("看我怎么拼");
+    await say("v:teach");
     this.slots = syl.parts.map(() => null);
     this.cards.forEach(c => { c.used = false; c.el.classList.remove("used"); });
-    this.renderSlots();
+    this.renderSlots({});
     for (let i = 0; i < syl.parts.length; i++) {
       this.slots[i] = syl.parts[i];
       const c = this.cards.find(k => !k.used && k.text === syl.parts[i]); if (c) { c.used = true; c.el.classList.add("used"); }
-      const st: Record<number, string> = {}; st[i] = "hl"; this.renderSlots(st);
+      this.renderSlots({ [i]: "hl" });
       if (hasVoice("p:" + syl.parts[i])) await say("p:" + syl.parts[i]); else await wait(500);
       await wait(250);
     }
-    this.drawTrail(syl.tone);
-    const ok: Record<number, string> = {}; syl.parts.forEach((_, i) => { ok[i] = "ok"; }); ok[syl.parts.length - 1] = "toned";
-    this.renderSlots(ok);
+    this.renderSlots(this.allState("ok"));
     await this.sayCurrent();
-    await wait(300);
-    await this.hit();
+    await this.enterTone();
   }
 
   private async hit() {
@@ -399,7 +452,7 @@ export class Battle {
       this.echo(syl.written, false);
       res();
     }));
-    if (!this.failed || this.wrongCalled) void this.sayCurrent();
+    void this.sayCurrent();
     await wait(1000);
     this.si++;
     if (this.si < this.syls.length) { this.beginSyllable(); if (this.item.kind !== "char") await this.sayCurrent(); return; }
@@ -413,7 +466,7 @@ export class Battle {
       const r = onAnswer(run, this.item.id, result, this.g.rng);
       recordAnswer(profile, this.item.id, result, run.runNo);
       if (r.stars > 0) this.g.toast(`${ICON.star} +${r.stars}`);
-      if (r.hintGained) setTimeout(() => this.g.toast(`连对奖励一个道具`), 900);
+      if (r.hintGained) { const got = r.hintGained; setTimeout(() => { this.g.toast(`连对啦！送你 ${HINT_INFO[got].icon} ${HINT_INFO[got].name}`); void say("v:streak"); }, 700); }
       this.g.hud.update(false, r.hintGained);
     }
     this.g.save();
@@ -435,16 +488,15 @@ export class Battle {
   private finish() {
     if (!this.alive) return;
     this.phase = "done"; this.alive = false;
-    this.g.hud.onHint = null;
+    this.g.hud.setHint(null);
     this.onEnd();
   }
 
   // ---------- 提示道具 ----------
   useHint(id: HintId): boolean {
     const syl = this.syls[this.si];
-    if (!syl || (this.phase !== "spell" && this.phase !== "tone")) return false;
-    if (id === "sweep" && this.phase !== "spell") return false;
-    if (id === "ghost" && this.phase !== "spell") return false;
+    if (!syl || this.teaching || (this.phase !== "spell" && this.phase !== "tone")) return false;
+    if ((id === "sweep" || id === "ghost") && this.phase !== "spell") return false;
     if (id === "trace" && (this.pendingTrace || this.guide)) return false;
     if (id === "sweep" && !this.cards.some(c => !c.used && !c.gone && !syl.parts.includes(c.text))) return false;
     if (!useHint(this.g.run, id)) return false;
@@ -455,10 +507,14 @@ export class Battle {
       this.cards.filter(c => !c.used && !c.gone && !syl.parts.includes(c.text)).slice(0, 2).forEach(c => { c.gone = true; c.el.classList.add("gone"); });
     }
     if (id === "ghost") {
+      clearTimeout(this.checkTimer);
       const i = this.slots.findIndex((s, k) => s === null || s !== syl.parts[k]);
-      if (i >= 0) { if (this.slots[i] !== null) { this.returnCard(this.slots[i]!); this.slots[i] = null; } this.ghostAt = i; this.renderSlots(this.ghostState()); }
+      if (i >= 0) { if (this.slots[i] !== null) { this.returnCard(this.slots[i]!); this.slots[i] = null; } this.ghostAt = i; this.renderSlots(); }
     }
-    if (id === "trace") { if (this.phase === "tone") this.showGuide(); else this.pendingTrace = true; }
+    if (id === "trace") {
+      if (this.phase === "tone") this.showGuide();
+      else { this.pendingTrace = true; this.g.toast(`${HINT_INFO.trace.icon} 划声调时会画出线`); }
+    }
     return true;
   }
 
@@ -468,16 +524,15 @@ export class Battle {
     const mouth = h("div", "mouth", mouthSvg(syl.kind === "whole" ? syl.base.replace(/^(zh|ch|sh|[rzcsyw])/, "") : last));
     mouth.style.left = "598px"; mouth.style.top = "206px"; // 注音条和拼音格之间
     this.root.append(mouth); this.extras.push(mouth);
-    const prevPhase = this.phase;
+    const inSpell = () => this.phase === "spell";
     for (let i = 0; i < syl.parts.length; i++) {
       if (!this.alive) return;
-      const st: Record<number, string> = { ...this.ghostState() }; st[i] = "hl";
-      if (prevPhase === "spell") this.renderSlots(st);
+      if (inSpell()) this.renderSlots({ ...this.ghostState(), [i]: "hl" });
       if (hasVoice("p:" + syl.parts[i])) await say("p:" + syl.parts[i], 0.9); else await wait(400);
       await wait(250);
     }
-    if (prevPhase === "spell" && this.phase === "spell") this.renderSlots(this.ghostState());
-    await this.talk(() => hasVoice("s:" + syl.written) ? say("s:" + syl.written, 0.85) : say("i:" + this.item.id, 0.85));
+    if (inSpell()) this.renderSlots();
+    await this.sayCurrent(0.85);
     setTimeout(() => mouth.remove(), 1500);
   }
 
@@ -508,17 +563,18 @@ export class Battle {
   }
   private hideDemo() { this.demoEl?.remove(); this.demoEl = null; }
 
-  /** 气泡、封印跟着怪物走 */
+  /** 气泡、封印、血条跟着怪物走 */
   private track() {
     if (!this.alive) return;
     const w = this.g.world;
     const [bx] = w.foeAnchor(0.7);
-    const bubX = Math.min(1100, Math.max(560, bx - 280)), bubY = 196; // 气泡跟着怪物在它左边，高度固定在拼音格上方
-    this.bubble.style.transform = `translate(${bubX}px, ${bubY}px)`;
+    const bubX = Math.min(1100, Math.max(560, bx - 280)); // 气泡跟着怪物在它左边，高度固定在拼音格上方
+    this.bubble.style.transform = `translate(${bubX}px, 196px)`;
     const [sx, sy] = w.foeTopAnchor();
-    this.seals.style.transform = `translate(${sx - this.seals.offsetWidth / 2}px, ${Math.max(150, sy + 4)}px)`;
-    this.bossHp.style.transform = `translate(${sx - 110}px, ${Math.max(150, sy + 4) + 34}px)`;
+    const top = Math.max(150, sy + 4);
+    this.seals.style.transform = `translate(${sx - this.seals.offsetWidth / 2}px, ${top}px)`;
+    this.bossHp.style.transform = `translate(${sx - 110}px, ${top - 22}px)`;
+    this.weakTag.style.transform = `translate(${sx - 120}px, ${top + 34}px)`;
     requestAnimationFrame(() => this.track());
   }
 }
-
