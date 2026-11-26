@@ -253,3 +253,20 @@ svg { display: block; }
 .rotate svg { margin: 0 auto 12px; }
 @media (orientation: portrait) { .rotate { display: grid; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+
+/* 新手关 */
+.tsteps { left: 0; right: 0; top: 26px; display: flex; justify-content: center; gap: 10px; pointer-events: none; }
+.tsteps span { padding: 6px 18px; border-radius: 999px; border: 1.5px solid var(--ink); background: #f7f1e3cc; font-size: 22px; color: #2b2a2699; }
+.tsteps span.on { background: var(--red); border-color: var(--red); color: #fbf3e6; }
+.tsteps span.done { color: var(--ink); }
+.tguide { left: 300px; top: 214px; width: 680px; height: 128px; overflow: visible; pointer-events: none; z-index: 3; }
+.tguide path, .tguide circle { fill: none; stroke: #b44a36aa; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 10 12; animation: march 1s linear infinite; }
+.tfinger { left: 0; top: 0; width: 64px; height: 64px; pointer-events: none; z-index: 40; filter: drop-shadow(2px 3px 0 #2b2a2640); }
+.tfinger.pulse svg { animation: tap 1s ease-in-out infinite; }
+.tfinger.up svg { transform: rotate(180deg); }
+.card.shake { animation: shake .4s; }
+.skip { right: 26px; bottom: 22px; }
+.skip.sure { background: var(--red-soft); border-color: var(--red); }
+.howto { left: 0; right: 0; top: 600px; margin: 0 auto; width: max-content; }
+.fresh { top: 690px; }
+.items .it.glow { animation: glow 1s ease-in-out infinite; border-color: var(--red); }

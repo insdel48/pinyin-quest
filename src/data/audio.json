@@ -603,5 +603,19 @@
 "v:pairs": "ea02eae55d.mp3",
 "v:camp": "814a2c5d3d.mp3",
 "v:win": "3b56e10f30.mp3",
-"v:lose": "9cc25fd532.mp3"
+"v:lose": "9cc25fd532.mp3",
+"v:t-hello": "1761388235.mp3",
+"v:t-listen": "543f1c0429.mp3",
+"v:t-spell": "e859d48b30.mp3",
+"v:t-tones": "256ddf6373.mp3",
+"v:t-tone1": "7e48821a07.mp3",
+"v:t-tone2": "693ffa599d.mp3",
+"v:t-tone3": "8f722c0194.mp3",
+"v:t-tone4": "d6dd4c4d0d.mp3",
+"v:t-neutral": "73c73bb568.mp3",
+"v:t-try": "453e36bdc3.mp3",
+"v:t-good": "5fb0b28d43.mp3",
+"v:t-back": "e38f0bf178.mp3",
+"v:t-done": "005a3506ef.mp3",
+"v:t-hint": "0c45a5a649.mp3"
 }

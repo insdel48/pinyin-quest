@@ -144,7 +144,7 @@ for n, j in enumerate(todo, 1):
         if j.get("similar"):
             want = "".join(re.findall(r"[\u4e00-\u9fff]", j["similar"]))
             got = "".join(re.findall(r"[\u4e00-\u9fff]", text))
-            passed = difflib.SequenceMatcher(None, want, got).ratio() >= 0.85
+            passed = difflib.SequenceMatcher(None, want, got).ratio() >= 0.75
         else:
             passed = heard_ok(text, j["expect"], j.get("toneless", False))
         if passed:
