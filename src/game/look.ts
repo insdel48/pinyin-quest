@@ -7,8 +7,8 @@ export const SUN_DIR = new THREE.Vector3(-6, 9, 5);
 
 export function setupRenderer(renderer: THREE.WebGLRenderer) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMapping = THREE.NeutralToneMapping; // 不改变背景图本来的颜色，只压住过亮的高光
+  renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 }

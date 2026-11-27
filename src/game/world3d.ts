@@ -15,9 +15,9 @@ import type { MonsterKind, OutfitId, SceneId } from "../core/types";
 
 export const STAGE_W = 1280, STAGE_H = 800;
 export const SCENE_IDS: SceneId[] = ["c1", "c2", "c3", "c4", "c5"];
-const HERO_X = -2.45, FOE_X = 1.95, FOE_Z = -0.4;
+const HERO_X = -1.45, HERO_Z = 0.4, FOE_X = 1.55, FOE_Z = -1.2;
 const BASE = import.meta.env.BASE_URL;
-const CAM = new THREE.Vector3(0, 1.45, 8.2), LOOK = new THREE.Vector3(0, 1.35, 0);
+const CAM = new THREE.Vector3(0, 1.3, 6.6), LOOK = new THREE.Vector3(0, 1.25, 0);
 const GOLD = 0xffc15a, MIST = 0x9a5cff;
 
 type Power = "light" | "heavy" | "finisher";
@@ -169,7 +169,7 @@ export class World {
     setupLights(this.renderer, this.scene);
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(STAGE_W, STAGE_H), 0.55, 0.5, 0.86)); // 只让发光的东西泛光
+    this.composer.addPass(new UnrealBloomPass(new THREE.Vector2(STAGE_W, STAGE_H), 0.5, 0.45, 1.15)); // 只让比白还亮的发光材质泛光，背景不泛光
     this.composer.addPass(new OutputPass());
 
     // 伤害字、闪屏叠在画布上
@@ -183,7 +183,7 @@ export class World {
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; this.scene.add(ground);
 
     this.scene.add(this.hero);
-    this.hero.position.set(HERO_X, 0, 0.2); this.hero.rotation.y = 0.35; // 模型面朝 +X，再稍微转向镜头
+    this.hero.position.set(HERO_X, 0, HERO_Z); this.hero.rotation.y = 0.35; // 模型面朝 +X，再稍微转向镜头
     this.scene.add(this.bracerLight, this.hitLight);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.75, 48), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     this.scene.add(this.ring);
@@ -248,7 +248,8 @@ export class World {
       castShadows(root);
       const mats = allMats(root).map(m => { const c = m.clone(); c.transparent = true; return c; });
       const byName = new Map(mats.map(m => [m.name, m]));
-      root.traverse(o => { const mesh = o as THREE.Mesh; if (mesh.isMesh) mesh.material = ([] as THREE.Material[]).concat(mesh.material).map(m => byName.get(m.name) ?? m) as THREE.Material[]; });
+      const swap = (m: THREE.Material) => byName.get(m.name) ?? m;
+      root.traverse(o => { const mesh = o as THREE.Mesh; if (mesh.isMesh) mesh.material = Array.isArray(mesh.material) ? mesh.material.map(swap) : swap(mesh.material); });
       const box = new THREE.Box3().setFromObject(root);
       const armor: THREE.Object3D[] = [];
       for (let i = 1; i <= 12; i++) { const a = root.getObjectByName(`Armor${i}`); if (a) armor.push(a); }
@@ -267,7 +268,7 @@ export class World {
   }
 
   /** 怪物离主角还剩几步（distance / total），越近越往左走 */
-  setApproach(distance: number, total: number) { this.foeXTarget = FOE_X - (total - distance) * (1.4 / Math.max(1, total)); }
+  setApproach(distance: number, total: number) { this.foeXTarget = FOE_X - (total - distance) * (0.8 / Math.max(1, total)); }
 
   /** 打掉多少护甲：0~1（整只神兽的进度），按比例把 Armor1…ArmorN 一块块打飞 */
   setDamage(frac: number) {
@@ -309,7 +310,7 @@ export class World {
   /** 护腕前方发招的位置 */
   private muzzle() {
     if (this.muzzleNode) return this.muzzleNode.getWorldPosition(new THREE.Vector3());
-    return V(HERO_X + this.heroDX + 0.5, 1.0, 0.4);
+    return V(HERO_X + this.heroDX + 0.5, 1.0, HERO_Z + 0.2);
   }
   private glyph(ch: string) {
     let t = this.glyphs.get(ch);
@@ -413,18 +414,18 @@ export class World {
     const reach = (foe?.actor.duration("Attack") ?? 1) * 0.5;
     foe?.actor.play("Attack");
     sfx("whoosh");
-    this.anim(reach * 1000, k => { this.foeX = from + (HERO_X + 2.6 - from) * (k * k); }, () => {
+    this.anim(reach * 1000, k => { this.foeX = from + (HERO_X + 2.4 - from) * (k * k); }, () => {
       const hurt = onBite();
-      const [hx, hy] = this.toStage(HERO_X, 1.4, 0.2);
+      const [hx, hy] = this.toStage(HERO_X, 1.4, HERO_Z);
       if (hurt) {
         this.heroActor?.play("Hit", 0.05);
         this.heroFlash = 1; this.hitStop(110); this.shake(0.22, 0.4); this.flash(0.3, "#ff5a48");
-        this.mist(V(HERO_X + 0.4, 1, 0.3), 14, 1);
+        this.mist(V(HERO_X + 0.4, 1, HERO_Z), 14, 1);
         this.anim(320, k => { this.heroDX = -0.35 * Math.sin((1 - k) * Math.PI / 2) * (1 - k); });
       } else {
-        this.floatText(hx + 80, hy - 40, "挡住！"); this.shockwave(V(HERO_X + 0.6, 1, 0.3), 1.2); this.shake(0.08, 0.2);
+        this.floatText(hx + 80, hy - 40, "挡住！"); this.shockwave(V(HERO_X + 0.6, 1, HERO_Z), 1.2); this.shake(0.08, 0.2);
       }
-      this.anim(520, k => { this.foeX = HERO_X + 2.6 + (from - HERO_X - 2.6) * (1 - (1 - k) ** 3); });
+      this.anim(520, k => { this.foeX = HERO_X + 2.4 + (from - HERO_X - 2.6) * (1 - (1 - k) ** 3); });
     });
   }
 
