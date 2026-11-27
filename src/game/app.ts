@@ -15,14 +15,13 @@ import { BOON_INFO, h, HINT_INFO, ICON, NODE_INFO } from "./ui";
 import { SCENE_IDS, STAGE_H, STAGE_W, World } from "./world3d";
 
 // NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点；TIPS_KEY：教过的东西（新手关、道具）
-const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips", STORY_KEY = "pq-story";
+const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips", STORY_KEY = "pq-story", BEAST_KEY = "pq-beasts";
 
 // 冒险故事（Gemini 写的《山海寻字记》，tools/story.py 整理）
 interface StorySentence { text: string; targets: number[]; pinyin: string[] }
-interface StoryEnemy { id: string; title: string; name: string; boss: boolean; says: string; sentences: StorySentence[] }
+interface StoryEnemy { id: string; title: string; name: string; boss: boolean; says: string; defeat: string; sentences: StorySentence[] }
 interface StoryChapter { id: string; title: string; intro: string; outro: string; enemies: StoryEnemy[] }
 const STORY = storyData as { hero: string; chapters: StoryChapter[]; ending: string };
-// 还没有专门的 3D 模型前，先借用已有的场景和怪物
 const store = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* 存不了就算了 */ } },
@@ -296,6 +295,8 @@ export class Game {
   private chapter: StoryChapter | null = null;
   get inStory() { return !!this.chapter; }
   private storyDone(): string[] { try { return JSON.parse(store.get(STORY_KEY) ?? "[]") as string[]; } catch { return []; } }
+  /** 净化过的神兽（敌人编号），收进神兽图鉴 */
+  private beasts(): string[] { try { return JSON.parse(store.get(BEAST_KEY) ?? "[]") as string[]; } catch { return []; } }
 
   /** 选章节：按顺序解锁 */
   chapters() {
@@ -311,9 +312,32 @@ export class Game {
       if (open) this.once(b, () => this.playChapter(c)); else b.disabled = true;
       row.append(b);
     });
-    panel.append(row);
+    const got = this.beasts().length, all = STORY.chapters.reduce((n, c) => n + c.enemies.length, 0);
+    const book = h("button", "btn small beast-btn", `${BOOK_ICON}<span>神兽图鉴 ${got} / ${all}</span>`); book.addEventListener("click", () => this.bestiary());
+    panel.append(row, book);
     const back = h("button", "btn small back", `${ICON.back}<span>回去</span>`); back.addEventListener("click", () => this.home());
     this.show(back, panel);
+  }
+
+  /** 神兽图鉴：净化过的神兽可以点开看 3D 模型和来历，没净化的只显示剪影 */
+  private bestiary(pick?: string) {
+    const got = new Set(this.beasts());
+    const all = STORY.chapters.flatMap(c => c.enemies.map(e => ({ c, e })));
+    const cur = all.find(x => x.e.id === pick && got.has(x.e.id)) ?? all.find(x => got.has(x.e.id)) ?? null;
+    this.world.setScene((cur?.c.id ?? "c1") as SceneId);
+    this.world.showcase(cur?.e.id ?? null);
+    const list = h("div", "panel beast-list", `<h2>神兽图鉴</h2>`);
+    const grid = h("div", "beast-grid");
+    for (const { c, e } of all) {
+      const has = got.has(e.id);
+      const b = h("button", "beast" + (has ? "" : " locked") + (cur?.e === e ? " on" : "") + (e.boss ? " boss" : ""), has ? `<b>${e.name}</b><span>${c.title}</span>` : `<b>？</b><span>${c.title}</span>`);
+      if (has) b.addEventListener("click", () => this.bestiary(e.id)); else b.disabled = true;
+      grid.append(b);
+    }
+    list.append(grid);
+    const info = h("div", "panel beast-info", cur ? `<span class="title">${cur.e.boss ? "镇守神兽" : "山海神兽"} · ${cur.c.title}</span><b>${cur.e.title}·${cur.e.name}</b><p>${cur.e.defeat}</p>` : `<b>还没有神兽</b><p>去冒险里净化失控的神兽，它们会来到这里</p>`);
+    const back = h("button", "btn small back", `${ICON.back}<span>回去</span>`); back.addEventListener("click", () => { this.world.showcase(null); this.chapters(); });
+    this.show(back, list, info);
   }
 
   private async playChapter(c: StoryChapter) {
@@ -371,10 +395,11 @@ export class Game {
       this.show();
       this.hud.root.hidden = false; this.hud.update();
       this.storyResolve = resolve;
-      this.battle = new Battle(this, e.boss ? "boss" : "battle", () => { this.battle = null; this.storyResolve = null; endBattle(this.run, e.boss ? "elite" : "battle"); this.hud.update(); this.save(); resolve(true); }, { kind: e.boss ? "ding" : "blob", model: e.id, questions });
+      this.battle = new Battle(this, e.boss ? "boss" : "battle", () => { this.battle = null; this.storyResolve = null; this.addBeast(e.id); endBattle(this.run, e.boss ? "elite" : "battle"); this.hud.update(); this.save(); resolve(true); }, { kind: e.boss ? "ding" : "blob", model: e.id, questions });
     });
   }
   private storyResolve: ((won: boolean) => void) | null = null;
+  private addBeast(id: string) { const s = new Set(this.beasts()); s.add(id); store.set(BEAST_KEY, JSON.stringify([...s])); }
 
   /** 冒险里心用完了：这一章重来 */
   private chapterLost() {

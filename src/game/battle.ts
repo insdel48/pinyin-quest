@@ -60,6 +60,7 @@ export class Battle {
   private cards: Card[] = [];
   private distance = 2; private total = 2;
   private hits = 0; private totalHits = 1; // 打碎神兽护甲的进度
+  private combo = 0; private comboEl = h("div", "combo"); // 连着拼对几个音，3 个起每一下都是重击
   private phase: Phase = "intro";
   private failed = false; private assisted = false; private wrongCalled = false;
   private teaching = false;
@@ -73,7 +74,8 @@ export class Battle {
     // 跳过了新手关的孩子，第一道题还是给最基本的手指提示
     this.tutorial = !g.tips.tutorial && g.profile.runsCompleted === 0 && Object.keys(g.profile.items).length < 2;
     this.strip.append(this.stripInner);
-    this.root.append(this.strip, this.seals, this.bossHp, this.weakTag, this.slotsEl, this.hand, this.bubble);
+    this.root.append(this.strip, this.seals, this.bossHp, this.weakTag, this.slotsEl, this.hand, this.comboEl, this.bubble);
+    this.comboEl.hidden = true;
     this.bossHp.innerHTML = "<i></i>";
     this.bossHp.hidden = true;
     this.bubble.addEventListener("click", () => this.replay());
@@ -130,7 +132,24 @@ export class Battle {
       this.g.world.cheer();
       return this.finish();
     }
+    if (this.story && this.kind === "boss" && this.bossQueue.length === 0 && this.bossHpMax > 1) {
+      // 大怪最后一句：它蓄力要反击，一口气拼对就能挡住
+      this.counterTry = true;
+      this.g.world.bossCharge();
+      const c = h("div", "counter", "<span>镇守神兽要反击了！一口气拼对，挡住它！</span>");
+      this.root.append(c); setTimeout(() => c.remove(), 2700);
+      await wait(1600);
+    }
     await this.beginItem(q.q, q.weak);
+  }
+  private counterTry = false;
+
+  private setCombo(n: number) {
+    this.combo = n;
+    this.comboEl.hidden = n < 2;
+    if (n < 2) return;
+    this.comboEl.innerHTML = `<small>连击</small>×${n}`;
+    this.comboEl.classList.remove("bump"); void this.comboEl.offsetWidth; this.comboEl.classList.add("bump");
   }
 
   private targetEls: HTMLElement[] = [];
@@ -331,6 +350,7 @@ export class Battle {
     chosen.forEach((p, i) => { st[i] = p === syl.parts[i] ? "ok" : "bad"; });
     this.renderSlots(st);
     sfx("nope");
+    this.setCombo(0);
     this.g.world.attack(false, () => sfx("miss"));
     if (spelled && spelled !== syl.written) {
       this.echo(spelled, true);
@@ -405,6 +425,7 @@ export class Battle {
     // 声调错了：读出这个调，再读一遍正确的
     this.phase = "busy";
     const spelled = compose(syl.parts, tone);
+    this.setCombo(0);
     this.g.world.attack(false, () => sfx("miss"));
     if (spelled) {
       this.echo(spelled, true);
@@ -492,6 +513,7 @@ export class Battle {
     const syl = this.syls[this.si];
     // 一个音打一下；整题最后一个音出大招（冲上去连打再挑飞）
     const last = this.si === this.syls.length - 1;
+    this.setCombo(this.combo + 1);
     await new Promise<void>(res => this.g.world.attack(true, () => {
       sfx("seal");
       this.seals.children[this.si]?.classList.add("broken");
@@ -499,7 +521,7 @@ export class Battle {
       if (p) { p.classList.remove("hide"); p.textContent = syl.written; p.classList.add("reveal"); }
       res();
       this.hits++; this.g.world.setDamage(this.hits / this.totalHits);
-    }, last && (!this.queued || this.bossHpNow <= (this.weak && !this.failed && !this.assisted ? 2 : 1)) ? "finisher" : last ? "heavy" : "light", syl.written, this.q.chars[this.q.targets[this.si]] ?? ""));
+    }, last && (!this.queued || this.bossHpNow <= (this.weak && !this.failed && !this.assisted ? 2 : 1)) ? "finisher" : last || this.combo >= 3 ? "heavy" : "light", syl.written, this.q.chars[this.q.targets[this.si]] ?? ""));
     void this.sayCurrent();
     await wait(1000);
     this.si++;
@@ -518,6 +540,7 @@ export class Battle {
       this.g.hud.update(false, r.hintGained);
     }
     this.g.save();
+    if (this.counterTry && result === "correct") this.g.toast("完美反击！");
     if (this.multi) { await wait(300); await say(this.q.voice); }
     await wait(400);
     if (this.queued) {

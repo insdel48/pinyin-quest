@@ -19,6 +19,7 @@ const HERO_X = -1.45, HERO_Z = 0.4, FOE_X = 1.75, FOE_Z = -1.8;
 const BASE = import.meta.env.BASE_URL;
 const CAM = new THREE.Vector3(0, 1.3, 6.6), LOOK = new THREE.Vector3(0, 1.25, 0);
 const GOLD = 0xffc15a, MIST = 0x9a5cff;
+const SHOW_X = 1.9; // 图鉴里神兽站的位置（左边是名单）
 
 type Power = "light" | "heavy" | "finisher";
 const reduce = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -130,6 +131,7 @@ export class World {
   private foe: Foe | null = null;
   private foeWant: string | null = null;
   private broken = 0;
+  private show = false; // 图鉴里展示：神兽站在中间慢慢转，已经净化（金光、不冒黑雾），主角不出场
   // 主角
   private hero = new THREE.Group();
   private heroActor: Actor | null = null;
@@ -236,8 +238,20 @@ export class World {
   /** 打赢了：小乐做胜利动作 */
   cheer() { this.heroActor?.play("Victory"); }
 
+  /** 图鉴里展示一只净化过的神兽；null = 回到战斗场景 */
+  showcase(model: string | null) {
+    this.show = !!model;
+    this.hero.visible = !model;
+    this.loadFoe(model);
+  }
+
   /** 换神兽（模型编号，如 c1e2）；null = 没有。神兽从右边走进来、仰头怒吼 */
   setMonster(model: string | null) {
+    this.show = false; this.hero.visible = true;
+    this.loadFoe(model);
+  }
+
+  private loadFoe(model: string | null) {
     if (this.foe) this.scene.remove(this.foe.root);
     this.foe = null; this.foeWant = model; this.broken = 0;
     this.foeKnock = 0; this.foeFade = 1; this.foeGlow = 1;
@@ -258,6 +272,11 @@ export class World {
       const foe: Foe = { actor: new Actor(root, g.animations), root: holder, armor, glow: glowMats(root), mats, core: root.getObjectByName("Core") ?? null, top: box.max.y, hitY: (box.min.y + box.max.y) * 0.55 };
       this.foe = foe;
       this.scene.add(holder);
+      if (this.show) {
+        this.foeGlow = 0; this.foeX = this.foeXTarget = SHOW_X;
+        foe.glow.forEach(m => m.emissive.set(GOLD));
+        return;
+      }
       this.foeXTarget = FOE_X; this.foeX = FOE_X + 5;
       sfx("step");
       this.anim(900, k => { this.foeX = FOE_X + 5 * (1 - k) ** 2; }, () => {
@@ -408,6 +427,17 @@ export class World {
     this.anim(500, k => { this.heroDX = step * (1 - k); });
   }
 
+  /** 大怪蓄力要反击：仰头怒吼，身上紫光大盛、黑雾翻涌 */
+  bossCharge() {
+    const foe = this.foe;
+    if (!foe) return;
+    foe.actor.play("Roar");
+    sfx("whoosh");
+    this.shake(0.12, 0.9);
+    this.mist(this.foeCore(), 40, 2.4);
+    this.anim(1400, k => { this.foeGlow = 1 + Math.sin(k * Math.PI) * 1.5; }, () => { this.foeGlow = 1; });
+  }
+
   /** 神兽扑过来挥爪，小乐被打得后仰。onBite 返回 false 表示被挡住 */
   lunge(onBite: () => boolean) {
     const from = this.foeX, foe = this.foe;
@@ -532,8 +562,9 @@ export class World {
       if (this.foeFade === 1) this.foeX += (this.foeXTarget - this.foeX) * Math.min(1, gdt * 2.5);
       this.foeKnock *= Math.pow(0.03, gdt);
       foe.root.position.set(this.foeX + this.foeKnock, 0, FOE_Z);
+      if (this.show) foe.root.rotation.y += gdt * 0.35;
       const hk = this.hitT >= 0 ? Math.max(0, 1 - (t - this.hitT) / 0.35) : 0;
-      foe.glow.forEach(m => { m.emissiveIntensity = (1.4 + (reduce ? 0 : Math.sin(t * 3) * 0.4)) * this.foeGlow + hk * 2 * this.hitPower; });
+      foe.glow.forEach(m => { m.emissiveIntensity = this.show ? 1.2 : (1.4 + (reduce ? 0 : Math.sin(t * 3) * 0.4)) * this.foeGlow + hk * 2 * this.hitPower; });
       if (this.foeFade < 1) foe.mats.forEach(m => { m.opacity = this.foeFade; m.depthWrite = this.foeFade > 0.5; });
       if (!reduce && this.foeGlow > 0.5 && rnd() < gdt * 6) this.mist(this.foeCore().add(V(0, 0.3, 0)), 1, 1.6); // 身上一直冒着黑雾
     }

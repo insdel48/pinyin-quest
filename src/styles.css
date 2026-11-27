@@ -305,3 +305,28 @@ svg { display: block; }
 .strip.sentence .ch.plain .h { font-size: 34px; line-height: 50px; color: var(--text); }
 .strip.sentence .ch.tgt { width: 72px; }
 .strip.sentence .ch.tgt .h { font-size: 46px; }
+
+/* 神兽图鉴 */
+.beast-btn { align-self: center; }
+.beast-list { left: 40px; top: 96px; width: 560px; height: 664px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.beast-list h2 { margin: 0; font-size: 34px; color: var(--gold); text-align: center; letter-spacing: .12em; }
+.beast-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-content: start; }
+.beast { height: 104px; border: 1.5px solid var(--line-soft); border-radius: 10px; background: var(--glass-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.beast b { font-family: var(--f-han); font-size: 30px; color: var(--text); }
+.beast span { font-size: 16px; color: var(--text-dim); }
+.beast.boss { border-color: var(--line); }
+.beast.boss b { color: var(--gold); }
+.beast.on { border-color: var(--gold); border-width: 2.5px; box-shadow: 0 0 20px var(--glow); }
+.beast.locked { opacity: .45; }
+.beast.locked b { color: var(--text-dim); }
+.beast-info { left: 640px; top: 560px; width: 600px; padding: 16px 26px; display: flex; flex-direction: column; gap: 6px; }
+.beast-info .title { font-size: 18px; color: var(--text-dim); letter-spacing: .2em; }
+.beast-info b { font-family: var(--f-han); font-size: 38px; color: var(--gold); text-shadow: 0 0 14px var(--glow); }
+.beast-info p { margin: 0; font-family: var(--f-han); font-size: 21px; line-height: 1.6; color: var(--text); }
+
+/* 连击、大怪反击 */
+.combo { right: 48px; top: 430px; text-align: right; color: var(--gold); font: 800 italic 64px/1 "Avenir Next", var(--f-py); text-shadow: 0 0 22px var(--glow), 0 2px 4px #000; pointer-events: none; }
+.combo small { display: block; font: 600 20px var(--f-ui); letter-spacing: .3em; color: var(--text); font-style: normal; }
+.combo.bump { animation: pop .35s ease-out; }
+.counter { left: 0; right: 0; top: 250px; text-align: center; pointer-events: none; z-index: 6; }
+.counter span { display: inline-block; padding: 10px 34px; font-family: var(--f-han); font-size: 34px; color: #fff; background: linear-gradient(90deg, transparent, rgba(80, 40, 150, .85), transparent); text-shadow: 0 0 14px rgba(167, 123, 255, .9); animation: toast 2.6s ease-out forwards; }
