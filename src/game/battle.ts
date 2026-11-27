@@ -8,6 +8,7 @@ import { hasVoice, preload, say, sfx, stopVoice, wait } from "./audio";
 import type { Game } from "./app";
 import { picSvg } from "./pics";
 import { h, HINT_INFO, ICON, mouthSvg, TONE_PATH } from "./ui";
+import { foeFor } from "./world3d";
 
 type Kind = "battle" | "elite" | "boss";
 
@@ -29,7 +30,7 @@ export function sentenceQuestion(id: string, text: string, targets: number[], pi
   return { id, voice: "t:" + id, chars: [...text], targets, syls: pinyin.map(analyze), sentence: true };
 }
 /** 冒险故事里的一个敌人：用哪种怪物模型，出哪几道题 */
-export interface StoryFoe { kind: MonsterKind; questions: Question[] }
+export interface StoryFoe { kind: MonsterKind; model: string; questions: Question[] }
 type Phase = "intro" | "spell" | "tone" | "busy" | "done";
 type Card = { text: string; used: boolean; gone: boolean; el: HTMLDivElement };
 
@@ -108,7 +109,7 @@ export class Battle {
     if (!this.alive) return;
     const kind = this.monsters.shift();
     if (!kind) return this.finish();
-    this.g.world.setMonster(kind);
+    this.g.world.setMonster(this.story?.model ?? foeFor(kind, this.g.world.sceneId));
     sfx("step");
     await wait(700);
     if (this.queued) return this.nextBossQuestion();

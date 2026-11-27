@@ -7,6 +7,7 @@ import story from "./story.json";
 
 const voices = audio as Record<string, string>;
 const enemies = story.chapters.flatMap(c => c.enemies);
+const assets = new Set(Object.keys(import.meta.glob(["/public/bg/*.jpg", "/public/models/**/*.glb"])));
 
 describe("冒险故事", () => {
   test("5 章，每章 3 个小怪 + 1 个大怪，每个敌人 3 句", () => {
@@ -29,5 +30,13 @@ describe("冒险故事", () => {
       ...enemies.flatMap(e => [`n:${e.id}-says`, ...e.sentences.map((_, i) => `t:${e.id}-${i}`)]),
     ];
     expect(keys.filter(k => !voices[k])).toEqual([]);
+  });
+  test("每章有背景图、每个敌人有 3D 模型（缺了去 tools/blender/foes/ 补，或让 Codex 画背景）", () => {
+    const need = [
+      ...story.chapters.map(c => `/public/bg/${c.id}.jpg`),
+      ...enemies.map(e => `/public/models/foes/${e.id}.glb`),
+      "/public/models/kid.glb", "/public/models/foes/didi.glb", "/public/models/foes/fist.glb",
+    ];
+    expect(need.filter(f => !assets.has(f))).toEqual([]);
   });
 });

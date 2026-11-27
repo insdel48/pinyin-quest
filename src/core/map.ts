@@ -37,7 +37,7 @@ export function generateMap(rng: () => number): RunMap {
     }
   }
 
-  const scenes: SceneId[] = ["shanye", "zhulin", "shuixiang", "hetang", "xueshan"];
+  const scenes: SceneId[] = ["c1", "c2", "c3", "c4"];
   const [a, b] = shuffle(rng, scenes);
-  return { layers, scenes: [a, a, a, a, b, b, b, "denghui"] };
+  return { layers, scenes: [a, a, a, a, b, b, b, "c5"] };
 }

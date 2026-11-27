@@ -12,7 +12,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,woff2,mp3,json,png}"],
+        globPatterns: ["**/*.{js,css,html,svg,woff2,mp3,json,png,jpg,glb,wasm}"],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
       manifest: {
@@ -23,8 +23,8 @@ export default defineConfig({
         scope: "/pinyin-quest/",
         display: "fullscreen",
         orientation: "landscape",
-        background_color: "#efe6d3",
-        theme_color: "#efe6d3",
+        background_color: "#2f8cff",
+        theme_color: "#2f8cff",
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "icon-512.png", sizes: "512x512", type: "image/png" },

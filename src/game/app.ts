@@ -6,13 +6,13 @@ import { compose } from "../core/pinyin";
 import { buy, loadProfile, saveProfile, SHOP } from "../core/progress";
 import { makeRng, pick, shuffle } from "../core/rng";
 import { campHeal, chestChoices, endBattle, finishRun, moveTo, newRun, takeChoice, type RunState } from "../core/run";
-import type { HintId, Item, MapNode, MonsterKind, OutfitId, Profile, SceneId, Syllable } from "../core/types";
+import type { HintId, Item, MapNode, OutfitId, Profile, SceneId, Syllable } from "../core/types";
 import { hasVoice, say, sfx, unlockAudio, wait } from "./audio";
 import { Battle, sentenceQuestion } from "./battle";
 import { Tutorial } from "./tutorial";
 import { picSvg } from "./pics";
 import { BOON_INFO, h, HINT_INFO, ICON, NODE_INFO } from "./ui";
-import { STAGE_H, STAGE_W, World } from "./world3d";
+import { SCENE_IDS, STAGE_H, STAGE_W, World } from "./world3d";
 
 // NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点；TIPS_KEY：教过的东西（新手关、道具）
 const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips", STORY_KEY = "pq-story";
@@ -23,8 +23,6 @@ interface StoryEnemy { id: string; title: string; name: string; boss: boolean; s
 interface StoryChapter { id: string; title: string; intro: string; outro: string; enemies: StoryEnemy[] }
 const STORY = storyData as { hero: string; chapters: StoryChapter[]; ending: string };
 // 还没有专门的 3D 模型前，先借用已有的场景和怪物
-const CHAPTER_SCENE: SceneId[] = ["shuixiang", "zhulin", "hetang", "denghui", "xueshan"];
-const FOE_MODEL: MonsterKind[] = ["blob", "lantern", "kite"];
 const store = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* 存不了就算了 */ } },
@@ -99,8 +97,7 @@ export class Game {
     this.items = (itemsData as Item[]).filter(i => hasVoice("i:" + i.id)); // 读音没核对通过的题不出、不进声音本
     this.profile = loadProfile(store.get(PROFILE_KEY));
     root.innerHTML = `<div id="vp"><div id="stage"><canvas id="gl" width="${STAGE_W}" height="${STAGE_H}" aria-label="战斗场景"></canvas>
-      <svg class="paper" width="${STAGE_W}" height="${STAGE_H}" aria-hidden="true"><filter id="paperf"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .47  0 0 0 0 .33  0 0 0 .45 0"/></filter><filter id="brush" x="-20%" y="-50%" width="140%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".08" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter><rect width="${STAGE_W}" height="${STAGE_H}" filter="url(#paperf)"/></svg>
-      <div class="vignette"></div><div id="screen"></div></div></div><div class="rotate"><div><svg viewBox="0 0 64 64" width="96" height="96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M10 54c10 6 34 6 44 0M48 50l6 4-4 6"/></svg><p>横过来玩</p></div></div>`;
+      <div id="screen"></div></div></div><div class="rotate"><div><svg viewBox="0 0 64 64" width="96" height="96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M10 54c10 6 34 6 44 0M48 50l6 4-4 6"/></svg><p>横过来玩</p></div></div>`;
     this.stage = root.querySelector("#stage")!;
     this.screen = root.querySelector("#screen")!;
     this.world = new World(root.querySelector("#gl")!);
@@ -137,14 +134,13 @@ export class Game {
   }
 
   private show(...els: HTMLElement[]) { this.battle?.destroy(); this.battle = null; this.tutorial?.destroy(); this.tutorial = null; this.hud.setHint(null); this.screen.replaceChildren(...els); }
-  private setNight() { this.stage.classList.toggle("night", this.world.night); }
   /** 点一下就锁住，防止孩子连点 */
   private once(b: HTMLButtonElement, fn: () => void) { b.addEventListener("click", () => { if (b.dataset.done) return; b.dataset.done = "1"; fn(); }); }
 
   // ---------- 首页 ----------
   home() {
     this.hud.root.hidden = true;
-    this.world.setScene("shanye"); this.world.setMonster(null); this.setNight();
+    this.world.setScene("c1"); this.world.setMonster(null);
     const title = h("div", "home-title", `<h1>拼音闯关</h1><div class="seal">救回被偷走的声音</div>`);
     const saved = store.get(RUN_KEY);
     const adv = h("button", "btn primary", `${ICON.play}<span>冒险</span>`);
@@ -154,7 +150,9 @@ export class Game {
       void tryFullscreen();
       if (saved) {
         try {
-          this.run = JSON.parse(saved) as RunState; this.rng = makeRng(this.run.seed + this.run.layer * 7919 + 1);
+          this.run = JSON.parse(saved) as RunState;
+          this.run.map.scenes = this.run.map.scenes.map(s => SCENE_IDS.includes(s) ? s : "c2"); // 旧版存档里的水墨场景
+          this.rng = makeRng(this.run.seed + this.run.layer * 7919 + 1);
           try { this.path = JSON.parse(store.get(PATH_KEY) ?? "[]") as string[]; } catch { this.path = []; }
           this.collectedAtStart = this.profile.collected.length;
           return this.resume();
@@ -228,7 +226,7 @@ export class Game {
     store.del(NODE_KEY);
     const run = this.run;
     this.hud.root.hidden = false; this.hud.update();
-    this.world.setScene(run.map.scenes[Math.min(run.layer, 7)]); this.world.setMonster(null); this.setNight();
+    this.world.setScene(run.map.scenes[Math.min(run.layer, 7)]); this.world.setMonster(null);
     const wrap = h("div", "panel mapwrap", `<h2>选下一站，点亮着的</h2>`);
     const grid = h("div", "mapgrid");
     const W = 1088, H = 440;
@@ -270,7 +268,7 @@ export class Game {
 
   private open(n: MapNode) {
     this.hud.root.hidden = false; this.hud.update();
-    this.world.setScene(this.run.map.scenes[n.layer - 1]); this.setNight();
+    this.world.setScene(this.run.map.scenes[n.layer - 1]);
     switch (n.type) {
       case "battle": case "elite": case "boss": return this.fight(n.type);
       case "chest": return this.chest(false);
@@ -303,13 +301,13 @@ export class Game {
   chapters() {
     this.chapter = null;
     this.hud.root.hidden = true;
-    this.world.setScene("shanye"); this.world.setMonster(null); this.setNight();
+    this.world.setScene("c1"); this.world.setMonster(null);
     const done = new Set(this.storyDone());
     const panel = h("div", "panel chapters", `<h2>响亮岛大冒险</h2>`);
     const row = h("div", "chapter-row");
     STORY.chapters.forEach((c, i) => {
       const open = i === 0 || done.has(STORY.chapters[i - 1].id);
-      const b = h("button", "chapter" + (open ? "" : " locked") + (done.has(c.id) ? " done" : ""), `<span class="no">第 ${i + 1} 章</span><b>${c.title}</b><span class="foes">${c.enemies.map(e => `<i title="${e.name}" class="${e.boss ? "boss" : ""}"></i>`).join("")}</span>${done.has(c.id) ? `<span class="ok">${ICON.star}</span>` : ""}`);
+      const b = h("button", "chapter" + (open ? "" : " locked") + (done.has(c.id) ? " done" : ""), `<span class="pic" style="background-image:url(${import.meta.env.BASE_URL}bg/${c.id}.jpg)"></span><span class="no">第 ${i + 1} 章</span><b>${c.title}</b><span class="foes">${c.enemies.map(e => `<i title="${e.name}" class="${e.boss ? "boss" : ""}"></i>`).join("")}</span>${done.has(c.id) ? `<span class="ok">${ICON.star}</span>` : ""}`);
       if (open) this.once(b, () => this.playChapter(c)); else b.disabled = true;
       row.append(b);
     });
@@ -323,12 +321,12 @@ export class Game {
     const seed = (Date.now() % 2147483646) + 1;
     this.run = newRun(this.profile, seed); this.rng = makeRng(seed + 31);
     this.collectedAtStart = this.profile.collected.length;
-    this.world.setScene(CHAPTER_SCENE[STORY.chapters.indexOf(c)] ?? "shanye"); this.setNight();
+    this.world.setScene(c.id as SceneId);
     await this.narrate(c.title, c.intro, `n:${c.id}-intro`);
-    for (const [i, e] of c.enemies.entries()) {
+    for (const e of c.enemies) {
       if (this.chapter !== c) return;
-      await this.enemyIntro(e, FOE_MODEL[i % FOE_MODEL.length]);
-      const won = await this.storyFight(e, e.boss ? "ding" : FOE_MODEL[i % FOE_MODEL.length]);
+      await this.enemyIntro(e);
+      const won = await this.storyFight(e);
       if (!won) return;
     }
     const done = new Set(this.storyDone()); done.add(c.id); store.set(STORY_KEY, JSON.stringify([...done]));
@@ -355,9 +353,9 @@ export class Game {
   }
 
   /** 敌人登场：名字、口头禅 */
-  private async enemyIntro(e: StoryEnemy, kind: MonsterKind) {
+  private async enemyIntro(e: StoryEnemy) {
     this.hud.root.hidden = false; this.hud.update();
-    this.world.setMonster(e.boss ? "ding" : kind);
+    this.world.setMonster(e.id);
     const card = h("div", "foe-card" + (e.boss ? " boss" : ""), `<span class="title">${e.boss ? "关底大怪" : "捣蛋怪出现"}</span><b>${e.title}·${e.name}</b><p>“${e.says}”</p>`);
     this.show(card);
     sfx("step");
@@ -366,14 +364,14 @@ export class Game {
     await wait(500);
   }
 
-  private storyFight(e: StoryEnemy, kind: MonsterKind): Promise<boolean> {
+  private storyFight(e: StoryEnemy): Promise<boolean> {
     const picks = e.boss ? e.sentences : shuffle(this.rng, e.sentences).slice(0, 2);
     const questions = picks.map(s => sentenceQuestion(`${e.id}-${e.sentences.indexOf(s)}`, s.text, s.targets, s.pinyin));
     return new Promise(resolve => {
       this.show();
       this.hud.root.hidden = false; this.hud.update();
       this.storyResolve = resolve;
-      this.battle = new Battle(this, e.boss ? "boss" : "battle", () => { this.battle = null; this.storyResolve = null; endBattle(this.run, e.boss ? "elite" : "battle"); this.hud.update(); this.save(); resolve(true); }, { kind, questions });
+      this.battle = new Battle(this, e.boss ? "boss" : "battle", () => { this.battle = null; this.storyResolve = null; endBattle(this.run, e.boss ? "elite" : "battle"); this.hud.update(); this.save(); resolve(true); }, { kind: e.boss ? "ding" : "blob", model: e.id, questions });
     });
   }
   private storyResolve: ((won: boolean) => void) | null = null;
