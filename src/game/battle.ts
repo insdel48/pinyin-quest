@@ -643,7 +643,7 @@ export class Battle {
     const bubX = Math.min(1100, Math.max(560, bx - 280)); // 气泡跟着怪物在它左边，高度固定在拼音格上方
     this.bubble.style.transform = `translate(${bubX}px, 196px)`;
     const [sx, sy] = w.foeTopAnchor();
-    const top = Math.max(150, sy + 4);
+    const top = Math.max(this.strip.offsetTop + this.stripInner.offsetHeight + 30, sy + 4); // 高大的神兽头顶会碰到句子条，血条一律放在句子条下面
     this.seals.style.transform = `translate(${sx - this.seals.offsetWidth / 2}px, ${top}px)`;
     this.bossHp.style.transform = `translate(${sx - 110}px, ${top - 22}px)`;
     this.weakTag.style.transform = `translate(${sx - 120}px, ${top + 34}px)`;
