@@ -18,6 +18,13 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      # 有 next 分支时，把它打包成预览版放到 /pinyin-quest/next/（推送 next 后手动运行一次这个流程来更新预览）
+      - name: 打包预览版
+        run: |
+          if git ls-remote --exit-code --heads origin next >/dev/null; then
+            git fetch --depth 1 origin next && git worktree add ../next FETCH_HEAD
+            cd ../next && npm ci && BASE=/pinyin-quest/next/ npm run build && cp -r dist "$GITHUB_WORKSPACE/dist/next"
+          fi
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
   deploy:
