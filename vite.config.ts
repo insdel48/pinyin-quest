@@ -28,8 +28,8 @@ export default defineConfig({
         scope: base,
         display: "fullscreen",
         orientation: "landscape",
-        background_color: "#2f8cff",
-        theme_color: "#2f8cff",
+        background_color: "#1a120a",
+        theme_color: "#1a120a",
         icons: [
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "icon-512.png", sizes: "512x512", type: "image/png" },

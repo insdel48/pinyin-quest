@@ -4,3 +4,5 @@ dist
 tools/.venv
 tools/.cache
 __pycache__/
+.blender-work/
+art-work/

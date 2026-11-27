@@ -59,6 +59,7 @@ export class Battle {
   private slots: (string | null)[] = [];
   private cards: Card[] = [];
   private distance = 2; private total = 2;
+  private hits = 0; private totalHits = 1; // 打碎神兽护甲的进度
   private phase: Phase = "intro";
   private failed = false; private assisted = false; private wrongCalled = false;
   private teaching = false;
@@ -94,6 +95,7 @@ export class Battle {
       this.bossHpMax = this.bossHpNow = this.bossQueue.length;
       this.monsters = [this.story.kind];
       this.bossHp.hidden = this.bossHpMax < 2; this.updateBossHp();
+      this.totalHits = this.story.questions.reduce((n, q) => n + q.syls.length, 0);
     } else if (this.kind === "boss") {
       this.bossQueue = bossQuestions(run, this.g.items, profile, this.g.rng).map(b => ({ q: itemQuestion(b.item), weak: b.weak }));
       this.bossHpMax = this.bossHpNow = this.bossQueue.length;
@@ -134,6 +136,7 @@ export class Battle {
   private targetEls: HTMLElement[] = [];
   private async beginItem(item: Question, weak: boolean) {
     this.q = item; this.weak = weak;
+    if (!this.story) { this.hits = 0; this.totalHits = item.syls.length; } // 闯关模式一只怪一道题；首领按每道题重新算
     this.syls = item.syls; this.si = 0;
     this.failed = this.assisted = this.wrongCalled = false;
     this.weakTag.innerHTML = weak ? "<span>大招题！打中掉两格血</span>" : "";
@@ -495,7 +498,8 @@ export class Battle {
       const p = this.targetEls[this.si]?.querySelector(".p");
       if (p) { p.classList.remove("hide"); p.textContent = syl.written; p.classList.add("reveal"); }
       res();
-    }, last && (!this.queued || this.bossHpNow <= (this.weak && !this.failed && !this.assisted ? 2 : 1)) ? "finisher" : last ? "heavy" : "light", syl.written));
+      this.hits++; this.g.world.setDamage(this.hits / this.totalHits);
+    }, last && (!this.queued || this.bossHpNow <= (this.weak && !this.failed && !this.assisted ? 2 : 1)) ? "finisher" : last ? "heavy" : "light", syl.written, this.q.chars[this.q.targets[this.si]] ?? ""));
     void this.sayCurrent();
     await wait(1000);
     this.si++;
@@ -567,7 +571,7 @@ export class Battle {
     const syl = this.syls[this.si];
     const last = syl.parts[syl.parts.length - 1];
     const mouth = h("div", "mouth", mouthSvg(syl.kind === "whole" ? syl.base.replace(/^(zh|ch|sh|[rzcsyw])/, "") : last));
-    mouth.style.left = "598px"; mouth.style.top = "206px"; // 注音条和拼音格之间
+    mouth.style.left = "598px"; mouth.style.top = "400px"; // 拼音格上方
     this.root.append(mouth); this.extras.push(mouth);
     const inSpell = () => this.phase === "spell";
     for (let i = 0; i < syl.parts.length; i++) {
@@ -601,7 +605,7 @@ export class Battle {
     for (let n = 0; n < 6 && this.demoEl; n++) {
       f.style.transition = "none"; f.style.transform = "translate(620px, 700px)";
       await wait(60);
-      f.style.transition = "transform 1s ease-in-out"; f.style.transform = "translate(560px, 380px)";
+      f.style.transition = "transform 1s ease-in-out"; f.style.transform = "translate(560px, 560px)";
       await wait(1600);
     }
     this.hideDemo();

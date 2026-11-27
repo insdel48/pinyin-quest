@@ -1,0 +1,73 @@
+<!doctype html>
+<!-- 模型检查页（只在本机 npm run dev 下用，不打包上线）：
+     /pinyin-quest/viewer.html?m=models/hero.glb&a=Idle&t=0.5&yaw=30&h=1.2&bg=bg/c1.jpg
+     m 模型路径（相对 public）；a 动作名，t 停在第几秒（不填就播放）；yaw 绕竖轴转多少度；h 镜头对准的高度；dist 镜头距离；bg 背景图（不填是灰色）。
+     页面右上角会列出模型的动作名、三角面数、贴图数和尺寸。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>模型检查</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #6b6f76; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  #info { position: fixed; top: 8px; right: 8px; font: 13px/1.5 Menlo, monospace; color: #fff; background: #0008; padding: 8px 10px; border-radius: 6px; white-space: pre; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="info">加载中…</div>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { setupRenderer, setupLights, castShadows } from "/src/game/look.ts";
+
+const q = new URLSearchParams(location.search);
+const BASE = import.meta.env.BASE_URL;
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+setupRenderer(renderer);
+const scene = new THREE.Scene();
+setupLights(renderer, scene);
+const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 200);
+scene.background = new THREE.Color(0x6b6f76);
+if (q.get("bg")) {
+  const t = await new THREE.TextureLoader().loadAsync(BASE + q.get("bg"));
+  t.colorSpace = THREE.SRGBColorSpace; scene.background = t;
+}
+const ground = new THREE.Mesh(new THREE.CircleGeometry(12, 64), new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 0.95 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+const draco = new DRACOLoader(); draco.setDecoderPath(BASE + "draco/");
+const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
+const gltf = await loader.loadAsync(BASE + (q.get("m") || "models/hero.glb"));
+const root = gltf.scene; castShadows(root);
+root.rotation.y = THREE.MathUtils.degToRad(+(q.get("yaw") || 0));
+scene.add(root);
+const mixer = new THREE.AnimationMixer(root);
+const clip = gltf.animations.find(c => c.name === q.get("a")) || null;
+if (clip) { const act = mixer.clipAction(clip); act.play(); if (q.get("t")) { mixer.setTime(+q.get("t")); act.paused = true; } }
+
+const box = new THREE.Box3().setFromObject(root), size = box.getSize(new THREE.Vector3());
+let tris = 0; const texs = new Set();
+root.traverse(o => { if (o.isMesh) { const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+  for (const m of [].concat(o.material)) for (const k of ["map", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap", "aoMap"]) if (m[k]) texs.add(m[k]); } });
+document.getElementById("info").textContent =
+  `尺寸 宽${size.x.toFixed(2)} 高${size.y.toFixed(2)} 深${size.z.toFixed(2)} 米\n三角面 ${Math.round(tris)}\n贴图 ${texs.size} 张\n动作 ${gltf.animations.map(c => `${c.name}(${c.duration.toFixed(1)}s)`).join(" ") || "无"}`;
+
+const h = +(q.get("h") || size.y * 0.5), dist = +(q.get("dist") || Math.max(size.y, size.x) * 2.6);
+camera.position.set(0, h + dist * 0.08, dist); camera.lookAt(0, h, 0);
+const clock = new THREE.Clock();
+function frame() {
+  const w = innerWidth, hh = innerHeight;
+  if (canvas.width !== Math.floor(w * renderer.getPixelRatio())) { renderer.setSize(w, hh, false); camera.aspect = w / hh; camera.updateProjectionMatrix(); }
+  if (!q.get("t")) mixer.update(clock.getDelta());
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+frame();
+window.__ready = true;
+</script>
+</body>
+</html>

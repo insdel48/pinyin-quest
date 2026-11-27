@@ -1,4 +1,4 @@
-// 新手关：第一次玩时，手把手教听、拼、四个声调和轻声，最后划出声调打败捣蛋怪。
+// 新手关：第一次玩时，手把手教听、拼、四个声调和轻声，最后划出声调打碎神兽的护甲。
 import { classifyTone } from "../core/gesture";
 import type { Tone } from "../core/types";
 import { say, sfx, stopVoice, wait } from "./audio";
@@ -109,7 +109,7 @@ export class Tutorial {
     this.renderSlots(["ma"], {});
     await this.learnTone(0, "v:t-neutral", "i:w-妈妈", "ma");
 
-    // 4. 出招：回到“猫”，自己划出一声打败捣蛋怪
+    // 4. 出招：回到“猫”，自己划出一声打碎神兽的护甲
     if (!this.alive) return;
     this.step(3);
     this.bubble.hidden = false;
@@ -121,7 +121,7 @@ export class Tutorial {
     if (!this.alive) return;
     void ok;
     this.renderSlots(["m", "āo"], { 0: "ok", 1: "toned" });
-    await new Promise<void>(res => w.attack(true, () => { sfx("seal"); res(); }, "finisher", "māo"));
+    await new Promise<void>(res => w.attack(true, () => { sfx("seal"); res(); }, "finisher", "māo", "猫"));
     const p = this.stripInner.querySelector(".p"); if (p) { p.classList.remove("hide"); p.textContent = "māo"; p.classList.add("reveal"); }
     await say("s:māo");
     await new Promise<void>(res => w.defeat(res));

@@ -2,6 +2,7 @@ import "@fontsource/andika/400.css";
 import "@fontsource/andika/700.css";
 import "@fontsource/noto-serif-sc/500.css";
 import "@fontsource/noto-serif-sc/700.css";
+import "@fontsource/noto-serif-sc/900.css";
 import "./styles.css";
 import { registerSW } from "virtual:pwa-register";
 import { Game } from "./game/app";

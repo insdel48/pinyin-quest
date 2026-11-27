@@ -1,4 +1,4 @@
-// 游戏外壳：舞台缩放、存档、顶部状态、各个画面（首页、路线、宝箱、小游戏、火堆、结算、换礼物、声音本）。
+// 游戏外壳：舞台缩放、存档、顶部状态、各个画面（首页、路线、宝箱、小游戏、火堆、结算、换礼物、字册）。
 import itemsData from "../data/items.json";
 import storyData from "../data/story.json";
 import { pairsEvent, statueEvent } from "../core/events";
@@ -17,7 +17,7 @@ import { SCENE_IDS, STAGE_H, STAGE_W, World } from "./world3d";
 // NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点；TIPS_KEY：教过的东西（新手关、道具）
 const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips", STORY_KEY = "pq-story";
 
-// 冒险故事（Gemini 写的《响亮岛大冒险》，tools/story.py 整理）
+// 冒险故事（Gemini 写的《山海寻字记》，tools/story.py 整理）
 interface StorySentence { text: string; targets: number[]; pinyin: string[] }
 interface StoryEnemy { id: string; title: string; name: string; boss: boolean; says: string; sentences: StorySentence[] }
 interface StoryChapter { id: string; title: string; intro: string; outro: string; enemies: StoryEnemy[] }
@@ -94,7 +94,7 @@ export class Game {
   saveTips() { store.set(TIPS_KEY, JSON.stringify(this.tips)); }
 
   constructor(root: HTMLElement) {
-    this.items = (itemsData as Item[]).filter(i => hasVoice("i:" + i.id)); // 读音没核对通过的题不出、不进声音本
+    this.items = (itemsData as Item[]).filter(i => hasVoice("i:" + i.id)); // 读音没核对通过的题不出、不进字册
     this.profile = loadProfile(store.get(PROFILE_KEY));
     root.innerHTML = `<div id="vp"><div id="stage"><canvas id="gl" width="${STAGE_W}" height="${STAGE_H}" aria-label="战斗场景"></canvas>
       <div id="screen"></div></div></div><div class="rotate"><div><svg viewBox="0 0 64 64" width="96" height="96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M10 54c10 6 34 6 44 0M48 50l6 4-4 6"/></svg><p>横过来玩</p></div></div>`;
@@ -141,7 +141,7 @@ export class Game {
   home() {
     this.hud.root.hidden = true;
     this.world.setScene("c1"); this.world.setMonster(null);
-    const title = h("div", "home-title", `<h1>拼音闯关</h1><div class="seal">救回被偷走的声音</div>`);
+    const title = h("div", "home-title", `<h1>拼音闯关</h1><div class="seal">山海寻字记</div>`);
     const saved = store.get(RUN_KEY);
     const adv = h("button", "btn primary", `${ICON.play}<span>冒险</span>`);
     adv.addEventListener("click", () => { void tryFullscreen(); if (!this.tips.tutorial) return this.learn(() => this.chapters()); this.chapters(); });
@@ -163,7 +163,7 @@ export class Game {
     });
     const actions = h("div", "home-actions"); actions.append(adv, go);
     const shop = h("button", "btn", `${ICON.star}<span>换礼物</span>`); shop.addEventListener("click", () => this.shop());
-    const book = h("button", "btn", `${BOOK_ICON}<span>声音本</span>`); book.addEventListener("click", () => this.book());
+    const book = h("button", "btn", `${BOOK_ICON}<span>字册</span>`); book.addEventListener("click", () => this.book());
     actions.append(shop, book);
     const how = h("button", "btn small howto", `${ICON.finger}<span>怎么玩</span>`); how.addEventListener("click", () => { void tryFullscreen(); this.learn(() => this.home()); });
     const els: HTMLElement[] = [title, actions, how, h("div", "pill stars home-stars", `${ICON.star}<span>${this.profile.stars}</span>`)];
@@ -303,7 +303,7 @@ export class Game {
     this.hud.root.hidden = true;
     this.world.setScene("c1"); this.world.setMonster(null);
     const done = new Set(this.storyDone());
-    const panel = h("div", "panel chapters", `<h2>响亮岛大冒险</h2>`);
+    const panel = h("div", "panel chapters", `<h2>山海寻字记</h2>`);
     const row = h("div", "chapter-row");
     STORY.chapters.forEach((c, i) => {
       const open = i === 0 || done.has(STORY.chapters[i - 1].id);
@@ -356,7 +356,7 @@ export class Game {
   private async enemyIntro(e: StoryEnemy) {
     this.hud.root.hidden = false; this.hud.update();
     this.world.setMonster(e.id);
-    const card = h("div", "foe-card" + (e.boss ? " boss" : ""), `<span class="title">${e.boss ? "关底大怪" : "捣蛋怪出现"}</span><b>${e.title}·${e.name}</b><p>“${e.says}”</p>`);
+    const card = h("div", "foe-card" + (e.boss ? " boss" : ""), `<span class="title">${e.boss ? "镇守神兽" : "失控神兽"}</span><b>${e.title}·${e.name}</b><p>“${e.says}”</p>`);
     this.show(card);
     sfx("step");
     await wait(500);
@@ -551,10 +551,10 @@ export class Game {
     this.hud.root.hidden = true;
     const fresh = this.profile.collected.slice(this.collectedAtStart).map(id => this.items.find(i => i.id === id)).filter((i): i is Item => !!i);
     const card = h("div", "panel center-card result", `<h2>${won ? "闯关成功！" : `走到第 ${run.layer} 站啦！`}</h2>
-      <p>${won ? "声音都救回来啦" : "星星都带回家了"}${this.profile.level > before ? "，真厉害，升级啦！" : ""}</p>
+      <p>${won ? "字都夺回来啦" : "星星都带回家了"}${this.profile.level > before ? "，真厉害，升级啦！" : ""}</p>
       <div class="bigstars">${ICON.star}+${run.stars}</div>`);
     if (fresh.length) {
-      const list = h("div", "newly", `<p>新救回 ${fresh.length} 个声音，点一点听听</p>`);
+      const list = h("div", "newly", `<p>新寻回 ${fresh.length} 个字，点一点听听</p>`);
       const chips = h("div", "chips");
       for (const it of fresh.slice(0, 8)) { const c = h("button", "chip", it.hanzi); c.addEventListener("click", () => void say("i:" + it.id)); chips.append(c); }
       list.append(chips); card.append(list);
@@ -599,12 +599,12 @@ export class Game {
 
   private wear(id: OutfitId) { this.profile.meta.outfit = id; this.world.setOutfit(id); this.save(); }
 
-  // ---------- 声音本 ----------
+  // ---------- 字册 ----------
   private book(tab: "char" | "word" | "idiom" = "char") {
     const got = new Set(this.profile.collected);
     const list = this.items.filter(i => i.kind === tab);
     const back = h("button", "btn small back", `${ICON.back}<span>回去</span>`); back.addEventListener("click", () => this.home());
-    const panel = h("div", "panel book", `<h2>声音本 · 救回 ${this.items.filter(i => got.has(i.id)).length} / ${this.items.length}</h2>`);
+    const panel = h("div", "panel book", `<h2>字册 · 寻回 ${this.items.filter(i => got.has(i.id)).length} / ${this.items.length}</h2>`);
     const tabs = h("div", "tabs");
     for (const [k, name, n] of [["char", "字", 1], ["word", "词语", 2], ["idiom", "成语", 4]] as const) {
       const b = h("button", "btn" + (k === tab ? " on" : ""), `${name}<span class="sq">${"<i></i>".repeat(n)}</span>`); b.addEventListener("click", () => this.book(k)); tabs.append(b);
