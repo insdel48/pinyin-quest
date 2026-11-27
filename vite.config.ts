@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config";
 import { VitePWA } from "vite-plugin-pwa";
 
 // 正式版在 /pinyin-quest/；样板预览版（next 分支）用 BASE=/pinyin-quest/next/ 打包到它下面
+declare const process: { env: Record<string, string | undefined> }; // 只在打包时由 Node 读，不引入整套 Node 类型
 const base = process.env.BASE ?? "/pinyin-quest/";
 
 export default defineConfig({
