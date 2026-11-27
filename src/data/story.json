@@ -57,7 +57,10 @@
         "chuī"
        ]
       }
-     ]
+     ],
+     "titlePy": "shǒu shān tóng shòu",
+     "namePy": "suān ní",
+     "defeatPy": "zuì hòu yī kuài lǜ xiù jiān jiǎ bèi jīn zì jī suì zǐ hēi wù qì hōng rán sàn kāi suān ní shuāng yǎn huī fù wēn rùn de hǔ pò jīn guāng wēi wǔ de dǒu dòng huǒ yàn tóng zōng cháo xiǎo lè dī tóu zhì yì hòu huà zuò jīn sè shòu yìn fēi rù tú jiàn"
     },
     {
      "id": "c1e2",
@@ -108,7 +111,10 @@
         "xīng"
        ]
       }
-     ]
+     ],
+     "titlePy": "xún shān yù shòu",
+     "namePy": "tiān lù",
+     "defeatPy": "bèi shang liè wén yù jiǎ yìng shēng suì luò wū zhuó hēi wù xiāo sàn tiān lù tōng tǐ tòu chū qīng chè wēn rùn de qīng yù guāng zé qīng yíng yuè shàng bàn kōng xiàng xiǎo lè diǎn tóu míng jiào huà zuò yī dào liú guāng shōu rù tú jiàn"
     },
     {
      "id": "c1e3",
@@ -157,7 +163,10 @@
         "yān"
        ]
       }
-     ]
+     ],
+     "titlePy": "sī chén táo shòu",
+     "namePy": "bì fāng",
+     "defeatPy": "shuāng yì wū sǔn táo jiǎ suì liè tuō luò zǐ huǒ shùn jiān zhuǎn wéi wēn nuǎn míng liàng de chì jīn chén guāng bì fāng dān zú wěn lì shí tái yǎng tiān fā chū yī shēng qīng yuè hè míng huà zuò chì jīn wén zhāng fēi rù tú jiàn"
     },
     {
      "id": "c1e4",
@@ -220,9 +229,13 @@
         "lái"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn yuè shén shòu",
+     "namePy": "kuí niú",
+     "defeatPy": "wǔ kuài qīn shí tóng jiǎ quán bù bēng suì màn tiān jīn zì hóng liú xǐ jìn hēi wù kuí niú shēn shang liàng qǐ táng huáng de jīn sè léi wén zhuǎn shēn yòng jù jiǎo zhuàng xiǎng shēn hòu de shān dǐng gǔ zhōng zài yōu yáng zhōng shēng zhōng fǔ shǒu huà zuò jīn sè shén shòu yìn jì"
     }
-   ]
+   ],
+   "titlePy": "yún dǐng gǔ tái"
   },
   {
    "id": "c2",
@@ -280,7 +293,10 @@
         "shān"
        ]
       }
-     ]
+     ],
+     "titlePy": "tīng fēng yù shòu",
+     "namePy": "bái zé",
+     "defeatPy": "àn dàn de cuì yù hù jiǎ suì liè bō luò bái zé hún shēn chóng xīn sàn fā chū róu hé jiǎo jié de bái yù yíng guāng zǐ sè shuāng yǎn huà zuò qīng chè bì sè wēn hé de cháo xiǎo lè hàn shǒu zhì xiè huà guāng shōu rù tú jiàn"
     },
     {
      "id": "c2e2",
@@ -331,7 +347,10 @@
         "pí"
        ]
       }
-     ]
+     ],
+     "titlePy": "xún lín táo shòu",
+     "namePy": "dāng kāng",
+     "defeatPy": "sān kuài huī táo liè jiǎ bèi jīn zì hōng suì hēi wù sàn jìn dāng kāng shēn shang de gǔ suì kè wén liàng qǐ nuǎn huáng wēi guāng tā huān kuài de huàng le huàng dà nǎo dài tuì kāi dào lù huà zuò jīn yìn fēi rù tú jiàn"
     },
     {
      "id": "c2e3",
@@ -382,7 +401,10 @@
         "qīng"
        ]
       }
-     ]
+     ],
+     "titlePy": "shǒu jiàn shí shòu",
+     "namePy": "xuán guī",
+     "defeatPy": "guī bèi shàng bèi wū rǎn de xuán shí jiǎ bǎn bēng kāi hēi wù xiāo sàn xuán guī bèi ké fú xiàn qīng xī de jīn sè luò shū gǔ wén fā chū yī shēng qīng liàng niǎo míng hòu qián rù qīng xī huà zuò jīn guāng guī rù tú jiàn"
     },
     {
      "id": "c2e4",
@@ -445,9 +467,13 @@
         "liú"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn lín shén shòu",
+     "namePy": "bái hǔ",
+     "defeatPy": "wǔ kuài zǐ hēi yù jiǎ jìn shù suì liè jīn sè zì líng xǐ qù hún shēn yīn mái bái hǔ chóng xiàn lǐn rán shèng jié de yín bái shén guāng zòng shēn yuè shàng shí qiáo huí wàng xiǎo lè cóng qiáo xià qǔ chū yé ye de hóng shéng zhú tǒng pāo lái suí jí huà zuò cuǐ càn hǔ yìn shōu rù tú jiàn"
     }
-   ]
+   ],
+   "titlePy": "yōu huáng zhú hǎi"
   },
   {
    "id": "c3",
@@ -505,7 +531,10 @@
         "làng"
        ]
       }
-     ]
+     ],
+     "titlePy": "xún hǎi yù shòu",
+     "namePy": "chī wěn",
+     "defeatPy": "sān piàn wū sǔn bì yù lín jiǎ suì liè fēi sàn hēi wù huà wéi qīng chè shuǐ zhū chī wěn tōng tǐ liàng qǐ jīng yíng tī tòu de hǎi lán guāng zé zài kōng zhōng huān kuài de bǎi wěi yóu chū yī dào hú xiàn huà zuò jīn yìn shōu rù tú jiàn"
     },
     {
      "id": "c3e2",
@@ -556,7 +585,10 @@
         "jīn"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn làng tóng shòu",
+     "namePy": "cháo fēng",
+     "defeatPy": "hǎi làng wén tóng jiǎ bēng suì tuō luò hēi wù xiāo sàn cháo fēng shuāng móu chóng xiàn míng liàng jīn máng wěn wěn luò zài guǎng chǎng biān áng shǒu qīng xiào yī shēng huà zuò jīn sè shòu yìn fēi rù tú jiàn"
     },
     {
      "id": "c3e3",
@@ -607,7 +639,10 @@
         "pò"
        ]
       }
-     ]
+     ],
+     "titlePy": "tuó bēi shí shòu",
+     "namePy": "bà xià",
+     "defeatPy": "suǒ kòu shí jiǎ yìng shēng suì kāi hēi wù sàn qù tā bèi shang de shí bēi chóng xīn fú xiàn chū jīn guāng shǎn shǎn de yuǎn gǔ míng wén bà xià xīn wèi de huǎn huǎn fú dī shēn qū huà zuò jīn yìn guī rù tú jiàn"
     },
     {
      "id": "c3e4",
@@ -668,9 +703,13 @@
         "mén"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn hǎi shén shòu",
+     "namePy": "yìng lóng",
+     "defeatPy": "wǔ kuài wū rǎn lóng lín zhòng jiǎ zhú yī jī suì wàn zhàng jīn guāng chuān tòu shēn hǎi yìng lóng tuì jìn hēi wù hún shēn jīn lín yǔ qīng yù yì mó yì yì shēng huī tā cháng yín yī shēng tuī kāi chén zhòng de bǎo kù shí mén lù chū cáng yǒu yé ye tóng xiá de shí tái suí hòu huà zuò jīn sè lóng yìn shōu rù tú jiàn"
     }
-   ]
+   ],
+   "titlePy": "cāng míng lóng gōng"
   },
   {
    "id": "c4",
@@ -726,7 +765,10 @@
         "jīn"
        ]
       }
-     ]
+     ],
+     "titlePy": "xún shā táo shòu",
+     "namePy": "zhēng",
+     "defeatPy": "sān kuài chì táo liè jiǎ bèi jīn zì jī suì zǐ wù sàn jìn zhēng hún shēn fàn qǐ rú wǎn xiá bān wēn rùn de chì jīn táo guāng shōu qǐ wǔ wěi zài fēng huǒ tái qián qīng yuè zhì yì huà zuò jīn sè shòu yìn shōu rù tú jiàn"
     },
     {
      "id": "c4e2",
@@ -777,7 +819,10 @@
         "zhōng"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn guān shí shòu",
+     "namePy": "bì àn",
+     "defeatPy": "shā yán hù jiǎ bēng liè huà shā hēi wù bèi jīn guāng dí dàng yī kōng bì àn shuāng mù huī fù hào rán jīn máng duān zuò guān qián cháo xiǎo lè sù mù hàn shǒu huà zuò jīn yìn guī rù tú jiàn"
     },
     {
      "id": "c4e3",
@@ -828,7 +873,10 @@
         "zhuī"
        ]
       }
-     ]
+     ],
+     "titlePy": "tà shā tóng shòu",
+     "namePy": "tiān mǎ",
+     "defeatPy": "wū rǎn tóng kǎi yìng shēng suì luò tiān mǎ chóng xiàn càn làn duó mù de liú jīn shén cǎi rào zhe xiǎo lè yǔ jīn míng qīng kuài bēn téng yī quān áng shǒu sī míng hòu huà zuò jīn sè mǎ yìn fēi rù tú jiàn"
     },
     {
      "id": "c4e4",
@@ -889,9 +937,13 @@
         "liàng"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn mò shén shòu",
+     "namePy": "lù wú",
+     "defeatPy": "wǔ kuài hǔ pò qīng tóng zhòng jiǎ zhú yī suì liè màn tiān fēng shā suí hēi wù yī tóng píng xī lù wú zhōu shēn liàng qǐ róu hé zhuāng yán de hǔ pò jīn guāng cè shēn ràng kāi guān mén lù chū kè yǒu yé ye liú yán de gǔ yù bēi suí hòu huà zuò shén shòu yìn jì shōu rù tú jiàn"
     }
-   ]
+   ],
+   "titlePy": "liú shā gǔ chéng"
   },
   {
    "id": "c5",
@@ -949,7 +1001,10 @@
         "shuāng"
        ]
       }
-     ]
+     ],
+     "titlePy": "shǒu tán yù shòu",
+     "namePy": "fū zhū",
+     "defeatPy": "hán yù hù jiǎ shàng de zǐ hēi bīng shuāng yìng shēng bēng suì fū zhū chóng xiàn chún jìng wú xiá de bīng xuě yín huī wēn róu de cháo xiǎo lè hé dǐng zhōng de yé ye fǔ shǒu zhì yì huà zuò jīn yìn shōu rù tú jiàn"
     },
     {
      "id": "c5e2",
@@ -1000,7 +1055,10 @@
         "yān"
        ]
       }
-     ]
+     ],
+     "titlePy": "sī léi tóng shòu",
+     "namePy": "qí lín",
+     "defeatPy": "sān kuài qīn shí lín jiǎ suì liè tuō luò hēi wù xiāo sàn qí lín zhōu shēn zhàn fàng chū xiáng ruì càn làn de chún jīn léi guāng tà zhe yún qì ràng kāi tiān jiē huà zuò jīn sè lín yìn fēi rù tú jiàn"
     },
     {
      "id": "c5e3",
@@ -1049,7 +1107,10 @@
         "jiù"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn yuān shí shòu",
+     "namePy": "xuán wǔ",
+     "defeatPy": "hēi yào shí zhòng jiǎ bēng kāi zǐ wù sàn jìn guī jiǎ shàng de běi chén xīng wén chóng xīn liàng qǐ cuǐ càn jīn xīng xuán wǔ yǔ líng shé tóng shí xiàng xiǎo lè dī tóu xíng lǐ huà zuò jīn guāng yìn jì shōu rù tú jiàn"
     },
     {
      "id": "c5e4",
@@ -1112,9 +1173,13 @@
         "hé"
        ]
       }
-     ]
+     ],
+     "titlePy": "zhèn dǐng gǔ shòu",
+     "namePy": "tāo tiè",
+     "defeatPy": "suí zhe xiǎo lè yǔ wán quán huī fù jīn yǔ de jīn míng hé lì niàn chū zuì hòu yī jù zhēn yán wǔ kuài cán quē zhòng jiǎ hōng rán suì liè tāo tiè xiōng kǒu lú táng lǐ de hēi wù shùn jiān bèi diǎn liàng chéng wàn qiān cuǐ càn jīn zì huà zuò jīn sè xīng hé yǒng rù cāng jié mǔ dǐng xiū bǔ liè hén tāo tiè tuì jìn hēi qì lù chū gǔ pǔ zhuāng yán de àn jīn tóng shēn shōu qǐ hún shēn lì cì xiàng wēn shùn de dà gǒu yī yàng dī xià jù dà de nǎo dai qīng qīng cèng le cèng xiǎo lè de shǒu zhǎng zuì hòu huà zuò tú jiàn fēi yè zuì yào yǎn de jīn sè zūn yìn"
     }
-   ]
+   ],
+   "titlePy": "kūn lún zhī diān"
   }
  ],
  "ending": "「仓颉母鼎发出洪亮的钟鸣，万千金字像流星雨一样飞回大地。竹海重新响起沙沙风声，大海翻起欢腾的浪花，世间万物都找回了自己的名字和声音。」\n「爷爷走下祭坛，笑着抱紧小乐，轻轻摸了摸饕餮巨大的青铜脑袋。原来爷爷是千年里第一个帮饕餮拂去积雪、念出它名字的人。」\n「重获清明的饕餮收起利爪，不好意思地低吼一声，化作最后一枚金色印记飞进小乐的图鉴。金鸣找回了全部金羽，欢快地绕着昆仑山巅盘旋长鸣。」\n「朝阳升起，金光洒满万里山河。小乐牵着爷爷的手，腕上的青铜护腕熠熠生辉，向着崭新的远方出发！」"

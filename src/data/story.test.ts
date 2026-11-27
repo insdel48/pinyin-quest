@@ -24,6 +24,14 @@ describe("冒险故事", () => {
     }).map(s => s.text));
     expect(bad).toEqual([]);
   });
+  test("章节名、神兽称号和名字、神兽来历的注音和汉字一一对上（对不上重跑 tools/story.py）", () => {
+    const han = (t: string) => [...t].filter(ch => /\p{Script=Han}/u.test(ch)).length;
+    const pairs: [string, string][] = [
+      ...story.chapters.map(c => [c.title, c.titlePy] as [string, string]),
+      ...enemies.flatMap(e => [[e.title, e.titlePy], [e.name, e.namePy], [e.defeat, e.defeatPy]] as [string, string][]),
+    ];
+    expect(pairs.filter(([t, py]) => !py || py.split(" ").length !== han(t)).map(([t]) => t)).toEqual([]);
+  });
   test("章节旁白、敌人口头禅、每句朗读都有读音", () => {
     const keys = [
       ...story.chapters.flatMap(c => [`n:${c.id}-intro`, `n:${c.id}-outro`]),

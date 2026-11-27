@@ -1,6 +1,8 @@
 """把 Gemini 写的冒险故事（tools/story-source.md）整理成游戏数据 src/data/story.json。
 
 句子里用【】标出的是要孩子拼的重点字；重点字的拼音用 pypinyin 按整句上下文取，再用 OVERRIDE 人工改正。
+章节名、神兽称号和名字、神兽来历这些生僻字多的地方，整段注上拼音（字段名带 Py，按汉字顺序空格隔开）；
+pypinyin 读错的词加进 PHRASES，跑完对照打印出来的注音再检查一遍多音字。
 运行：tools/.venv/bin/python tools/story.py
 """
 import json
@@ -8,13 +10,27 @@ import pathlib
 import re
 import unicodedata
 
-from pypinyin import Style, pinyin
+from pypinyin import Style, lazy_pinyin, load_phrases_dict, pinyin
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = (ROOT / "tools/story-source.md").read_text(encoding="utf-8")
 
 # 人工改正：(句子, 重点字序号) → 拼音
 OVERRIDE: dict = {}
+
+# pypinyin 读错的词（多音字、轻声）
+PHRASES = {
+    "应声": "yìng shēng", "应龙": "yìng lóng", "散发": "sàn fā", "化为": "huà wéi", "雾化为": "wù huà wéi", "古朴": "gǔ pǔ",
+    "夺目的": "duó mù de", "晃了晃": "huàng le huàng", "脑袋": "nǎo dai", "爷爷": "yé ye",
+    "洗尽": "xǐ jìn", "散尽": "sàn jìn", "褪尽": "tuì jìn", "身上": "shēn shang", "背上": "bèi shang",
+    "威武地": "wēi wǔ de", "温和地": "wēn hé de", "欢快地": "huān kuài de", "欣慰地": "xīn wèi de", "温柔地": "wēn róu de",
+}
+load_phrases_dict({k: [[x] for x in v.split()] for k, v in PHRASES.items()})
+
+
+def ruby(text):
+    """整段汉字的注音，标点和符号不占位"""
+    return " ".join(unicodedata.normalize("NFC", x) for x in lazy_pinyin(text, style=Style.TONE, errors="ignore"))
 
 CH_RE = re.compile(r"^### 第(.)章：(.+)$")
 EN_RE = re.compile(r"^#### (普通敌人 \d|关底大怪|终极关底大怪)：(.+?)·(.+)$")
@@ -57,6 +73,7 @@ for n, line in enumerate(lines):
     m = CH_RE.match(line)
     if m:
         cur = {"id": f"c{len(chapters) + 1}", "title": m.group(2).strip(), "scene": "", "intro": "", "outro": "", "enemies": []}
+        cur["titlePy"] = ruby(cur["title"])
         chapters.append(cur)
         en = None
         continue
@@ -75,6 +92,7 @@ for n, line in enumerate(lines):
               "boss": "大怪" in m.group(1), "look": field(block, "长相描述"),
               "says": quote(field(block, "性格与口头禅")), "attack": field(block, "攻击方式"),
               "defeat": field(block, "被打败时的样子"), "sentences": []}
+        en.update(titlePy=ruby(en["title"]), namePy=ruby(en["name"]), defeatPy=ruby(en["defeat"]))
         cur["enemies"].append(en)
         continue
     ms = re.match(r"^\s+\d\.\s+(.+)$", line)
@@ -86,7 +104,9 @@ ending = "\n".join(p.strip() for p in ending.splitlines()[1:] if p.strip() and p
 data = {"hero": "小乐", "chapters": chapters, "ending": ending}
 (ROOT / "src/data/story.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 for c in chapters:
-    print(c["id"], c["title"], len(c["enemies"]), "个敌人")
+    print(c["id"], c["title"], c["titlePy"], len(c["enemies"]), "个敌人")
     for e in c["enemies"]:
+        print(" ", e["title"], e["titlePy"], e["name"], e["namePy"])
+        print("   ", " ".join(f"{h}{p}" for h, p in zip(re.findall(r"[\u4e00-\u9fff]", e["defeat"]), e["defeatPy"].split())))
         for s in e["sentences"]:
             print("  ", e["name"], s["text"], " ".join(f"{s['text'][t]}{p}" for t, p in zip(s["targets"], s["pinyin"])))

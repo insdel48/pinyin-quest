@@ -11,7 +11,7 @@ import { hasVoice, say, sfx, unlockAudio, wait } from "./audio";
 import { Battle, sentenceQuestion } from "./battle";
 import { Tutorial } from "./tutorial";
 import { picSvg } from "./pics";
-import { BOON_INFO, h, HINT_INFO, ICON, NODE_INFO } from "./ui";
+import { BOON_INFO, h, HINT_INFO, ICON, NODE_INFO, ruby } from "./ui";
 import { SCENE_IDS, STAGE_H, STAGE_W, World } from "./world3d";
 
 // NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点；TIPS_KEY：教过的东西（新手关、道具）
@@ -19,8 +19,8 @@ const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH
 
 // 冒险故事（Gemini 写的《山海寻字记》，tools/story.py 整理）
 interface StorySentence { text: string; targets: number[]; pinyin: string[] }
-interface StoryEnemy { id: string; title: string; name: string; boss: boolean; says: string; defeat: string; sentences: StorySentence[] }
-interface StoryChapter { id: string; title: string; intro: string; outro: string; enemies: StoryEnemy[] }
+interface StoryEnemy { id: string; title: string; titlePy: string; name: string; namePy: string; boss: boolean; says: string; defeat: string; defeatPy: string; sentences: StorySentence[] }
+interface StoryChapter { id: string; title: string; titlePy: string; intro: string; outro: string; enemies: StoryEnemy[] }
 const STORY = storyData as { hero: string; chapters: StoryChapter[]; ending: string };
 const store = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -304,16 +304,16 @@ export class Game {
     this.hud.root.hidden = true;
     this.world.setScene("c1"); this.world.setMonster(null);
     const done = new Set(this.storyDone());
-    const panel = h("div", "panel chapters", `<h2>山海寻字记</h2>`);
+    const panel = h("div", "panel chapters", `<h2>${ruby("山海寻字记", "shān hǎi xún zì jì")}</h2>`);
     const row = h("div", "chapter-row");
     STORY.chapters.forEach((c, i) => {
       const open = i === 0 || done.has(STORY.chapters[i - 1].id);
-      const b = h("button", "chapter" + (open ? "" : " locked") + (done.has(c.id) ? " done" : ""), `<span class="pic" style="background-image:url(${import.meta.env.BASE_URL}bg/${c.id}.jpg)"></span><span class="no">第 ${i + 1} 章</span><b>${c.title}</b><span class="foes">${c.enemies.map(e => `<i title="${e.name}" class="${e.boss ? "boss" : ""}"></i>`).join("")}</span>${done.has(c.id) ? `<span class="ok">${ICON.star}</span>` : ""}`);
+      const b = h("button", "chapter" + (open ? "" : " locked") + (done.has(c.id) ? " done" : ""), `<span class="pic" style="background-image:url(${import.meta.env.BASE_URL}bg/${c.id}.jpg)"></span><span class="no">第 ${i + 1} 章</span><b>${ruby(c.title, c.titlePy)}</b><span class="foes">${c.enemies.map(e => `<i title="${e.name}" class="${e.boss ? "boss" : ""}"></i>`).join("")}</span>${done.has(c.id) ? `<span class="ok">${ICON.star}</span>` : ""}`);
       if (open) this.once(b, () => this.playChapter(c)); else b.disabled = true;
       row.append(b);
     });
     const got = this.beasts().length, all = STORY.chapters.reduce((n, c) => n + c.enemies.length, 0);
-    const book = h("button", "btn small beast-btn", `${BOOK_ICON}<span>神兽图鉴 ${got} / ${all}</span>`); book.addEventListener("click", () => this.bestiary());
+    const book = h("button", "btn small beast-btn", `${BOOK_ICON}<span>${ruby("神兽图鉴", "shén shòu tú jiàn")} ${got} / ${all}</span>`); book.addEventListener("click", () => this.bestiary());
     panel.append(row, book);
     const back = h("button", "btn small back", `${ICON.back}<span>回去</span>`); back.addEventListener("click", () => this.home());
     this.show(back, panel);
@@ -326,16 +326,21 @@ export class Game {
     const cur = all.find(x => x.e.id === pick && got.has(x.e.id)) ?? all.find(x => got.has(x.e.id)) ?? null;
     this.world.setScene((cur?.c.id ?? "c1") as SceneId);
     this.world.showcase(cur?.e.id ?? null);
-    const list = h("div", "panel beast-list", `<h2>神兽图鉴</h2>`);
+    const list = h("div", "panel beast-list", `<h2>${ruby("神兽图鉴", "shén shòu tú jiàn")}</h2>`);
     const grid = h("div", "beast-grid");
-    for (const { c, e } of all) {
-      const has = got.has(e.id);
-      const b = h("button", "beast" + (has ? "" : " locked") + (cur?.e === e ? " on" : "") + (e.boss ? " boss" : ""), has ? `<b>${e.name}</b><span>${c.title}</span>` : `<b>？</b><span>${c.title}</span>`);
-      if (has) b.addEventListener("click", () => this.bestiary(e.id)); else b.disabled = true;
-      grid.append(b);
+    for (const c of STORY.chapters) {
+      grid.append(h("span", "beast-ch", ruby(c.title, c.titlePy)));
+      for (const e of c.enemies) {
+        const has = got.has(e.id);
+        const b = h("button", "beast" + (has ? "" : " locked") + (cur?.e === e ? " on" : "") + (e.boss ? " boss" : ""), `<b>${has ? ruby(e.name, e.namePy) : "？"}</b>`);
+        if (has) b.addEventListener("click", () => this.bestiary(e.id)); else b.disabled = true;
+        grid.append(b);
+      }
     }
     list.append(grid);
-    const info = h("div", "panel beast-info", cur ? `<span class="title">${cur.e.boss ? "镇守神兽" : "山海神兽"} · ${cur.c.title}</span><b>${cur.e.title}·${cur.e.name}</b><p>${cur.e.defeat}</p>` : `<b>还没有神兽</b><p>去冒险里净化失控的神兽，它们会来到这里</p>`);
+    const info = h("div", "panel beast-info", cur
+      ? `<span class="title">${cur.e.boss ? ruby("镇守神兽", "zhèn shǒu shén shòu") : ruby("山海神兽", "shān hǎi shén shòu")} · ${ruby(cur.c.title, cur.c.titlePy)}</span><b>${ruby(cur.e.title, cur.e.titlePy)}·${ruby(cur.e.name, cur.e.namePy)}</b><p>${ruby(cur.e.defeat, cur.e.defeatPy)}</p>`
+      : `<b>${ruby("还没有神兽", "hái méi yǒu shén shòu")}</b><p>${ruby("去冒险里净化失控的神兽，它们会来到这里", "qù mào xiǎn lǐ jìng huà shī kòng de shén shòu tā men huì lái dào zhè lǐ")}</p>`);
     const back = h("button", "btn small back", `${ICON.back}<span>回去</span>`); back.addEventListener("click", () => { this.world.showcase(null); this.chapters(); });
     this.show(back, list, info);
   }
@@ -346,7 +351,7 @@ export class Game {
     this.run = newRun(this.profile, seed); this.rng = makeRng(seed + 31);
     this.collectedAtStart = this.profile.collected.length;
     this.world.setScene(c.id as SceneId);
-    await this.narrate(c.title, c.intro, `n:${c.id}-intro`);
+    await this.narrate(ruby(c.title, c.titlePy), c.intro, `n:${c.id}-intro`);
     for (const e of c.enemies) {
       if (this.chapter !== c) return;
       await this.enemyIntro(e);
@@ -356,8 +361,8 @@ export class Game {
     const done = new Set(this.storyDone()); done.add(c.id); store.set(STORY_KEY, JSON.stringify([...done]));
     finishRun(this.profile, this.run); this.save();
     this.world.cheer();
-    await this.narrate(c.title, c.outro, `n:${c.id}-outro`, `${ICON.star}+${this.run.stars}`);
-    if (c === STORY.chapters[STORY.chapters.length - 1]) await this.narrate("大结局", STORY.ending, "");
+    await this.narrate(ruby(c.title, c.titlePy), c.outro, `n:${c.id}-outro`, `${ICON.star}+${this.run.stars}`);
+    if (c === STORY.chapters[STORY.chapters.length - 1]) await this.narrate(ruby("大结局", "dà jié jú"), STORY.ending, "");
     this.chapters();
   }
 
@@ -380,7 +385,7 @@ export class Game {
   private async enemyIntro(e: StoryEnemy) {
     this.hud.root.hidden = false; this.hud.update();
     this.world.setMonster(e.id);
-    const card = h("div", "foe-card" + (e.boss ? " boss" : ""), `<span class="title">${e.boss ? "镇守神兽" : "失控神兽"}</span><b>${e.title}·${e.name}</b><p>“${e.says}”</p>`);
+    const card = h("div", "foe-card" + (e.boss ? " boss" : ""), `<span class="title">${e.boss ? ruby("镇守神兽", "zhèn shǒu shén shòu") : ruby("失控神兽", "shī kòng shén shòu")}</span><b>${ruby(e.title, e.titlePy)}·${ruby(e.name, e.namePy)}</b><p>“${e.says}”</p>`);
     this.show(card);
     sfx("step");
     await wait(500);

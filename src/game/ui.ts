@@ -5,6 +5,14 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", html 
   const e = document.createElement(tag); if (cls) e.className = cls; if (html) e.innerHTML = html; return e;
 }
 
+/** 给汉字注拼音，像课本那样每个字一格、拼音在正上方：py 按汉字顺序空格隔开，标点不占位；个数对不上直接报错，免得注音错位 */
+export function ruby(text: string, py: string): string {
+  const syl = py.split(" "); let i = 0;
+  const out = [...text].map(ch => /\p{Script=Han}/u.test(ch) ? `<span class="zy"><span class="zy-p">${syl[i++] ?? ""}</span>${ch}</span>` : ch).join("");
+  if (i !== syl.length || syl.includes("")) throw new Error(`拼音个数和汉字对不上：${text} / ${py}`);
+  return out;
+}
+
 const svg = (body: string, vb = "0 0 32 32") => `<svg viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
 export const HINT_INFO: Record<HintId, { name: string; desc: string; icon: string }> = {
