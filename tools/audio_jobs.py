@@ -91,6 +91,23 @@ for name, text in VOICE_LINES.items():
     # 提示语不考读音，听写和原句大致一样（七成五以上）就行（“啦”常被听成“了”）
     jobs.append({"key": "v:" + name, "mode": "plain", "cands": [text], "expect": None, "similar": text})
 
+# 冒险故事：整句朗读、旁白、口头禅（大致听对就行），以及重点字里还没有读音的单字
+story = json.loads((ROOT / "src/data/story.json").read_text(encoding="utf-8"))
+have = {j["key"] for j in jobs}
+for c in story["chapters"]:
+    for k in ("intro", "outro"):
+        jobs.append({"key": f"n:{c['id']}-{k}", "mode": "plain", "cands": [c[k]], "expect": None, "similar": c[k]})
+    for e in c["enemies"]:
+        jobs.append({"key": f"n:{e['id']}-says", "mode": "plain", "cands": [e["says"]], "expect": None, "similar": e["says"]})
+        for i, sen in enumerate(e["sentences"]):
+            jobs.append({"key": f"t:{e['id']}-{i}", "mode": "plain", "cands": [sen["text"]], "expect": None, "similar": sen["text"]})
+            for t, syl in zip(sen["targets"], sen["pinyin"]):
+                ch = sen["text"][t]
+                if "s:" + syl in have:
+                    continue
+                have.add("s:" + syl)
+                jobs.append({"key": "s:" + syl, "mode": "carrier", "cands": [ch], "expect": [syl]})
+
 for j in jobs:
     j["file"] = fname(j.get("alias") or j["key"])
 

@@ -1,8 +1,10 @@
 // 3D 战斗场景：6 个场景、主角、5 种怪物、出招和命中效果。界面层只调用 World 的方法。
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { sfx } from "./audio";
 import type { MonsterKind, OutfitId, SceneId } from "../core/types";
 
-const INK = 0x2b2a26, RED = 0xb44a36;
+const INK = 0x2b2a26;
 export const STAGE_W = 1280, STAGE_H = 800;
 const FOE_X = 4.6, HERO_X = -4.6;
 
@@ -314,6 +316,17 @@ const OUTFITS: Record<OutfitId, { shirt: number; collar: number; patch: number }
 };
 
 // ---------- 场景控制 ----------
+type Power = "light" | "heavy" | "finisher";
+
+/** 卡通描边：顶点沿法线往外推一点、只画背面，得到粗黑轮廓线 */
+const outlineShader = new THREE.ShaderMaterial({
+  uniforms: { thickness: { value: 0.022 }, color: { value: new THREE.Color(0x14121a) } },
+  vertexShader: "uniform float thickness; void main() { vec3 p = position + normal * thickness; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }",
+  fragmentShader: "uniform vec3 color; void main() { gl_FragColor = vec4(color, 1.0); }",
+  side: THREE.BackSide,
+});
+const NO_OUTLINE = /^(eyeH|blush|teeth|tongue|smile|smiley|chestPatch|lace|watchFace|eyeP|nose)/;
+
 export class World {
   readonly renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -325,28 +338,31 @@ export class World {
   private foeGroup: THREE.Group | null = null;
   private foe: FoeHandle | null = null;
   private foeKind: MonsterKind | null = null;
+  // 主角：Blender 做的模型（public/models/kid.glb），按节点名做动作
   private hero = new THREE.Group();
-  private body = new THREE.Group();
-  private arm = new THREE.Group(); // 右手：拿毛笔出招
-  private armL = new THREE.Group(); // 左手：戴手表，比剪刀手
-  private head = new THREE.Group();
-  private vSign = new THREE.Group();
-  private shirtMat = toon(OUTFITS.tee.shirt);
-  private collarMat = toon(OUTFITS.tee.collar);
-  private patchMat = toon(OUTFITS.tee.patch);
-  private cheerK = 0;
+  private node: Record<"Body" | "Head" | "ArmR" | "ArmL" | "VSign", THREE.Object3D | null> = { Body: null, Head: null, ArmR: null, ArmL: null, VSign: null };
+  private heroMats: Record<string, THREE.MeshToonMaterial> = {};
+  private outfit: OutfitId = "tee";
+  private cheerK = 0; private swing = 0; private heroDX = 0; private heroLift = 0; private heroTilt = 0;
   private shadowMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.2 });
+  private heroShadow: THREE.Mesh;
   private foeShadow: THREE.Mesh;
   private shot = new THREE.Group();
   private shotParts: THREE.Mesh[];
   private drops: { m: THREE.Mesh; v: THREE.Vector3 }[];
+  // 动画用“游戏时间”：顿帧时停住，慢动作时变慢
   private anims: { start: number; dur: number; fn: (k: number) => void; done?: () => void }[] = [];
-  private hitAt = -1;
+  private gt = 0; private stopUntil = 0; private slowUntil = 0; private slowScale = 1;
+  private hitT = -1; private hitPower = 0;
+  private shakeAmp = 0; private shakeLeft = 0; private zoom = 0;
   private foeX = FOE_X; private foeXTarget = FOE_X; private foeScale = 1; private foeAlpha = 1;
+  private foeLift = 0; private foeSpin = 0; private foeKnock = 0; private launching = false;
   private heroFlash = 0;
   private last = performance.now();
   private running = false;
   private proj = new THREE.Vector3();
+  private fxLayer: HTMLDivElement;
+  private flashEl: HTMLDivElement;
   night = false;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -356,18 +372,45 @@ export class World {
     this.scene.fog = new THREE.Fog(0xefe6d3, 22, 80);
     this.scene.add(this.hemi); this.dir.position.set(-6, 9, 7); this.scene.add(this.dir);
 
-    this.buildKid();
-    const h = this.hero; this.scene.add(h);
-    h.position.set(HERO_X, 0, 0.3); h.rotation.y = 0.45; h.scale.setScalar(1.12);
-    M(new THREE.CircleGeometry(0.95, 32), this.shadowMat, HERO_X, 0.03, 0.3, this.scene).rotation.x = -Math.PI / 2;
+    // 打击特效（爆炸字、伤害字、闪屏）叠在画布上
+    this.fxLayer = document.createElement("div"); this.fxLayer.className = "fx3d";
+    this.flashEl = document.createElement("div"); this.flashEl.className = "flash3d";
+    canvas.after(this.fxLayer, this.flashEl);
+
+    this.scene.add(this.hero);
+    this.hero.position.set(HERO_X, 0, 0.3); this.hero.rotation.y = 0.45; this.hero.scale.setScalar(1.1);
+    void this.loadHero();
+    this.heroShadow = M(new THREE.CircleGeometry(0.95, 32), this.shadowMat, HERO_X, 0.03, 0.3, this.scene); this.heroShadow.rotation.x = -Math.PI / 2;
     this.foeShadow = M(new THREE.CircleGeometry(1.3, 32), this.shadowMat, FOE_X, 0.03, 0.4, this.scene); this.foeShadow.rotation.x = -Math.PI / 2;
 
     const inkMat = toon(INK);
     this.scene.add(this.shot); this.shot.visible = false;
-    this.shotParts = [0.24, 0.18, 0.14, 0.1, 0.07].map(r => M(new THREE.SphereGeometry(r, 14, 10), inkMat, 0, 0, 0, this.shot));
-    this.drops = Array.from({ length: 16 }, () => { const m = M(new THREE.SphereGeometry(0.08 + rnd() * 0.08, 8, 6), inkMat, 0, 0, 0, this.scene); m.visible = false; return { m, v: V(0, 0, 0) }; });
+    this.shotParts = [0.26, 0.19, 0.14, 0.1, 0.07].map(r => M(new THREE.SphereGeometry(r, 14, 10), inkMat, 0, 0, 0, this.shot));
+    this.drops = Array.from({ length: 22 }, () => { const m = M(new THREE.SphereGeometry(0.08 + rnd() * 0.1, 8, 6), inkMat, 0, 0, 0, this.scene); m.visible = false; return { m, v: V(0, 0, 0) }; });
     this.setScene("shanye");
     document.addEventListener("visibilitychange", () => { this.last = performance.now(); });
+  }
+
+  /** 载入 Blender 做的主角模型，换成卡通材质并加描边 */
+  private async loadHero() {
+    const gltf = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}models/kid.glb`);
+    const root = gltf.scene;
+    const meshes: THREE.Mesh[] = [];
+    root.traverse(o => { if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh); }); // 先收集，免得把新加的描边也遍历进去
+    meshes.forEach(mesh => {
+      const src = mesh.material as THREE.MeshStandardMaterial;
+      const name = src.name || "m";
+      if (!this.heroMats[name]) {
+        this.heroMats[name] = toon(src.color.getHex(), name === "skin" ? { emissive: 0x3a2412 } : {});
+        this.heroMats[name].name = name;
+      }
+      mesh.material = this.heroMats[name];
+      if (!NO_OUTLINE.test(mesh.name)) mesh.add(new THREE.Mesh(mesh.geometry, outlineShader));
+    });
+    for (const k of Object.keys(this.node) as (keyof World["node"])[]) this.node[k] = root.getObjectByName(k) ?? null;
+    if (this.node.VSign) this.node.VSign.visible = false;
+    this.hero.add(root);
+    this.setOutfit(this.outfit);
   }
 
   setScene(id: SceneId) {
@@ -385,91 +428,33 @@ export class World {
     this.night = !!S.night;
   }
 
-  setOutfit(id: OutfitId) { const o = OUTFITS[id]; this.shirtMat.color.setHex(o.shirt); this.collarMat.color.setHex(o.collar); this.patchMat.color.setHex(o.patch); }
-
-  /** 小主角：大头卡通小男孩。黑色短刺头、笑着吐舌头，白 T 恤（薄荷绿领口、胸前绿色小图案），
-   *  浅蓝松紧牛仔裤（裤脚收口、腿上黄色笑脸），白运动鞋，左手腕蓝手表，右手拿大毛笔 */
-  private buildKid() {
-    const b = this.body; this.hero.add(b);
-    const skin = toon(0xffe2c6, { emissive: 0x4a2c18 }), jeans = toon(0xa8c6e4), jeansDark = toon(0x8fb0d3), hair = toon(0x22201d);
-    // 鞋和腿
-    for (const x of [-0.15, 0.15]) {
-      const shoe = outline(M(new THREE.SphereGeometry(0.17, 16, 10), toon(0xf2f1ec), x, 0.09, 0.06, b), 1.08); shoe.scale.set(1, 0.6, 1.45);
-      M(new THREE.CylinderGeometry(0.17, 0.17, 0.04, 16), toon(0x9a9a94), x, 0.02, 0.06, b).scale.set(1, 1, 1.4);
-      outline(M(new THREE.CylinderGeometry(0.13, 0.15, 0.64, 12), jeans, x, 0.5, 0, b), 1.06);
-      M(new THREE.TorusGeometry(0.125, 0.045, 8, 16), jeansDark, x, 0.22, 0, b).rotation.x = Math.PI / 2;
-    }
-    M(new THREE.CircleGeometry(0.05, 16), toon(0xf0c84a), 0.17, 0.6, 0.155, b); // 腿上的黄色笑脸
-    outline(M(new THREE.CylinderGeometry(0.33, 0.32, 0.26, 18), jeans, 0, 0.88, 0, b), 1.04);
-    M(new THREE.TorusGeometry(0.325, 0.04, 8, 24), jeansDark, 0, 1.0, 0, b).rotation.x = Math.PI / 2;
-    // 上衣
-    outline(M(new THREE.CylinderGeometry(0.29, 0.35, 0.62, 18), this.shirtMat, 0, 1.3, 0, b), 1.05);
-    M(new THREE.TorusGeometry(0.19, 0.045, 8, 20), this.collarMat, 0, 1.6, 0, b).rotation.x = Math.PI / 2;
-    M(new THREE.BoxGeometry(0.17, 0.09, 0.03), this.patchMat, 0.02, 1.38, 0.33, b);
-    for (const x of [-0.37, 0.37]) outline(M(new THREE.SphereGeometry(0.15, 14, 10), this.shirtMat, x, 1.48, 0, b), 1.06).scale.set(1, 0.9, 1);
-    // 右手：手臂 + 大毛笔
-    this.arm.position.set(0.42, 1.48, 0.02); b.add(this.arm);
-    outline(M(new THREE.CylinderGeometry(0.07, 0.065, 0.48, 10), skin, 0.05, -0.24, 0.05, this.arm), 1.1).rotation.z = 0.15;
-    M(new THREE.SphereGeometry(0.09, 12, 10), skin, 0.09, -0.5, 0.1, this.arm);
-    const brush = new THREE.Group(); brush.position.set(0.09, -0.5, 0.1); brush.rotation.z = -0.35; this.arm.add(brush);
-    outline(M(new THREE.CylinderGeometry(0.04, 0.045, 1.5, 8), toon(0x6b4a33), 0, 0.55, 0, brush), 1.25);
-    M(new THREE.ConeGeometry(0.09, 0.34, 10), toon(INK), 0, 1.45, 0, brush);
-    M(new THREE.CylinderGeometry(0.055, 0.055, 0.08, 8), toon(RED), 0, 1.25, 0, brush);
-    // 左手：手臂 + 蓝手表 + 剪刀手（平时藏着）
-    this.armL.position.set(-0.42, 1.48, 0.02); b.add(this.armL);
-    outline(M(new THREE.CylinderGeometry(0.07, 0.065, 0.48, 10), skin, -0.04, -0.24, 0.02, this.armL), 1.1).rotation.z = -0.12;
-    M(new THREE.SphereGeometry(0.09, 12, 10), skin, -0.07, -0.5, 0.03, this.armL);
-    M(new THREE.CylinderGeometry(0.085, 0.085, 0.09, 12), toon(0x6fa8dc), -0.065, -0.42, 0.03, this.armL);
-    M(new THREE.BoxGeometry(0.1, 0.08, 0.04), toon(0xdff0fb), -0.065, -0.42, 0.11, this.armL);
-    this.vSign.position.set(-0.07, -0.56, 0.03); this.armL.add(this.vSign);
-    for (const r of [0.22, -0.22]) { const f = M(new THREE.CylinderGeometry(0.025, 0.028, 0.18, 6), skin, Math.sin(r) * 0.08, -0.08, 0, this.vSign); f.rotation.z = r + Math.PI; }
-    this.vSign.visible = false;
-    // 头：大头、刺头、笑着吐舌头
-    const hd = this.head; hd.position.set(0, 2.08, 0.02); b.add(hd);
-    outline(M(new THREE.SphereGeometry(0.5, 28, 20), skin, 0, 0, 0, hd), 1.04);
-    for (const x of [-0.49, 0.49]) M(new THREE.SphereGeometry(0.1, 10, 8), skin, x, -0.04, -0.02, hd).scale.set(0.6, 1, 1);
-    // 短刺头：头发盖到额头上沿，顶上一圈短刺朝上翘
-    outline(M(new THREE.SphereGeometry(0.54, 28, 18, 0, Math.PI * 2, 0, 1.22), hair, 0, 0.03, 0, hd), 1.03);
-    // 后脑勺：头发往下多盖一截（只盖后半圈，前面留脸）
-    M(new THREE.SphereGeometry(0.535, 24, 14, Math.PI, Math.PI, 1.1, 0.75), hair, 0, 0.0, 0, hd); // phi 从 π 到 2π 是脑后（z<0）
-    const up = new THREE.Vector3(0, 1, 0);
-    for (let ring = 0; ring < 3; ring++) for (let i = 0; i < 9 - ring * 2; i++) {
-      const a = (i / (9 - ring * 2)) * Math.PI * 2 + ring, tilt = 0.25 + ring * 0.3;
-      const dir = new THREE.Vector3(Math.cos(a) * Math.sin(tilt), Math.cos(tilt), Math.sin(a) * Math.sin(tilt)).normalize();
-      const out = dir.clone().lerp(up, 0.55).normalize(); // 刺儿往上翘
-      const sp = M(new THREE.ConeGeometry(0.085, 0.3, 6), hair, dir.x * 0.58, dir.y * 0.58 + 0.03, dir.z * 0.58, hd);
-      sp.quaternion.setFromUnitVectors(up, out);
-    }
-    for (let i = 0; i < 5; i++) { const sp = M(new THREE.ConeGeometry(0.065, 0.17, 6), hair, -0.22 + i * 0.11, 0.3, 0.42, hd); sp.rotation.x = 1.25; sp.rotation.z = (i - 2) * 0.12; } // 额前一排短刘海
-    const eyeMat = new THREE.MeshBasicMaterial({ color: INK }), white = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    for (const x of [-0.17, 0.17]) {
-      M(new THREE.SphereGeometry(0.065, 12, 10), eyeMat, x, 0.04, 0.45, hd).scale.set(0.85, 1.15, 0.5);
-      M(new THREE.SphereGeometry(0.02, 8, 6), white, x + 0.02, 0.07, 0.48, hd);
-      M(new THREE.BoxGeometry(0.13, 0.025, 0.02), eyeMat, x, 0.15, 0.465, hd).rotation.z = x > 0 ? -0.12 : 0.12;
-      M(new THREE.CircleGeometry(0.06, 16), new THREE.MeshBasicMaterial({ color: 0xf2a0a0, transparent: true, opacity: 0.5 }), x * 1.6, -0.1, 0.42, hd).rotation.y = x > 0 ? 0.5 : -0.5;
-    }
-    M(new THREE.TorusGeometry(0.13, 0.024, 6, 16, Math.PI), eyeMat, 0, -0.13, 0.47, hd).rotation.z = Math.PI; // 咧嘴笑
-    M(new THREE.SphereGeometry(0.06, 12, 8), toon(0xe9858a), 0.03, -0.24, 0.47, hd).scale.set(1, 0.75, 0.6); // 吐舌头
+  setOutfit(id: OutfitId) {
+    this.outfit = id;
+    const o = OUTFITS[id];
+    this.heroMats.shirt?.color.setHex(o.shirt); this.heroMats.collar?.color.setHex(o.collar); this.heroMats.patch?.color.setHex(o.patch);
   }
 
   /** 打败怪物：比个剪刀手、蹦一下 */
   cheer() {
     if (reduce) return;
-    this.vSign.visible = true;
-    this.anim(1300, k => { this.cheerK = Math.sin(Math.min(1, k * 1.4) * Math.PI / 2) * (k < 0.85 ? 1 : (1 - k) / 0.15); }, () => { this.cheerK = 0; this.vSign.visible = false; });
+    if (this.node.VSign) this.node.VSign.visible = true;
+    this.anim(1300, k => { this.cheerK = Math.sin(Math.min(1, k * 1.4) * Math.PI / 2) * (k < 0.85 ? 1 : (1 - k) / 0.15); }, () => { this.cheerK = 0; if (this.node.VSign) this.node.VSign.visible = false; });
   }
 
-  /** 换怪物；null = 没有怪物（地图、宝箱等） */
+  /** 换怪物；null = 没有怪物（地图、宝箱等）。怪物从右边跳进场 */
   setMonster(kind: MonsterKind | null) {
     if (this.foeGroup) { this.scene.remove(this.foeGroup); disposeTree(this.foeGroup); }
     this.foeGroup = null; this.foe = null; this.foeKind = kind;
     this.foeShadow.visible = !!kind;
+    this.launching = false; this.foeSpin = 0; this.foeLift = 0; this.foeKnock = 0;
     if (!kind) return;
     this.foeGroup = new THREE.Group(); this.scene.add(this.foeGroup);
     this.foe = { mats: [], eyes: [], update: () => {} };
     FOES[kind].build(this.foeGroup, this.foe);
     this.foeShadow.scale.setScalar(kind === "kite" ? 0.6 : kind === "ding" ? 1.25 : 1);
-    this.foeX = FOE_X + 6; this.foeXTarget = FOE_X; this.foeScale = 1; this.foeAlpha = 1;
+    this.foeScale = 1; this.foeAlpha = 1;
+    this.foeXTarget = FOE_X; this.foeX = FOE_X + 7;
+    this.anim(450, k => { this.foeX = FOE_X + 7 * (1 - (1 - (1 - k) ** 3)); this.foeLift = Math.sin(k * Math.PI) * 2.2; }, () => { this.foeLift = 0; this.hitT = this.gt; this.hitPower = 0.2; this.shake(0.12, 0.2); });
   }
 
   /** 怪物离主角还剩几步（distance / total），越近越往左走 */
@@ -482,47 +467,147 @@ export class World {
     this.proj.set(x, y, z).project(this.camera);
     return [(this.proj.x + 1) / 2 * STAGE_W, (1 - this.proj.y) / 2 * STAGE_H];
   }
-  foeAnchor(dy = 0): [number, number] { return this.toStage(this.foeX, (this.foeKind ? FOES[this.foeKind].hitY : 1.6) + dy, 0.4); }
-  foeTopAnchor(): [number, number] { return this.toStage(this.foeX, this.foeTop(), 0.4); }
+  private hitY() { return this.foeKind ? FOES[this.foeKind].hitY : 1.6; }
+  foeAnchor(dy = 0): [number, number] { return this.toStage(this.foeX, this.hitY() + dy + this.foeLift, 0.4); }
+  foeTopAnchor(): [number, number] { return this.toStage(this.foeX, this.foeTop() + this.foeLift, 0.4); }
 
-  private anim(dur: number, fn: (k: number) => void, done?: () => void) { this.anims.push({ start: performance.now(), dur, fn, done }); }
+  private anim(dur: number, fn: (k: number) => void, done?: () => void) { this.anims.push({ start: this.gt, dur: dur / 1000, fn, done }); }
+  private wait(ms: number) { return new Promise<void>(r => this.anim(ms, () => {}, r)); }
 
-  /** 主角挥笔甩墨。hit = true 打中怪物；false 打偏落地 */
-  attack(hit: boolean, onLand: () => void) {
-    this.anim(450, k => { this.arm.rotation.z = -Math.sin(k * Math.PI) * 1.1; });
-    const A = V(HERO_X + 0.8, 2.9, 0.5);
-    const hy = this.foeKind ? FOES[this.foeKind].hitY : 1.6;
-    const B = hit ? V(this.foeX - 0.2, hy, 1.0) : V(this.foeX - 2.6, 0.1, 1.4);
-    setTimeout(() => {
+  // ---------- 出招 ----------
+  /**
+   * 主角出招。hit = false 墨打偏。power：light 普通一下；heavy 一个字拼完；finisher 整题打完（冲上去连打三下再挑飞）。
+   * label 是打中时飘起来的字（拼音）。onLand 在打中（或落空）那一刻调用。
+   */
+  attack(hit: boolean, onLand: () => void, power: Power = "light", label = "") {
+    if (hit && power === "finisher") { void this.finisher(onLand, label); return; }
+    // 举笔蓄力 → 甩下去，墨团飞出
+    this.anim(140, k => { this.swing = -1.6 * k; }, () => {
+      sfx("whoosh");
+      this.anim(160, k => { this.swing = -1.6 + 2.4 * k; }, () => this.anim(300, k => { this.swing = 0.8 * (1 - k); }));
+      const A = V(HERO_X + 1.2, 3.0, 0.5);
+      const B = hit ? V(this.foeX - 0.2, this.hitY(), 1.0) : V(this.foeX - 2.6, 0.1, 1.4);
       this.shot.visible = true;
-      this.anim(420, k => this.shotParts.forEach((m, j) => { const tt = Math.max(0, k - j * 0.05); m.position.lerpVectors(A, B, tt); m.position.y += Math.sin(tt * Math.PI) * (hit ? 1.2 : 0.6); }), () => {
+      this.anim(hit ? 240 : 360, k => this.shotParts.forEach((m, j) => { const tt = Math.max(0, k - j * 0.06); m.position.lerpVectors(A, B, tt); m.position.y += Math.sin(tt * Math.PI) * (hit ? 0.7 : 0.6); }), () => {
         this.shot.visible = false;
-        this.splash(B, hit ? 1 : 0.5);
-        if (hit) this.hitAt = performance.now();
+        if (hit) this.impact(power === "heavy" ? 1 : 0.65, label);
+        else { this.splash(B, 0.5); this.burst(...this.toStage(B.x, B.y + 0.4, B.z), "噗", 0.6, "#cfc6b6"); this.shake(0.06, 0.12); sfx("miss"); }
         onLand();
       });
-    }, 220);
+    });
+  }
+
+  /** 打中的那一下：顿帧、震屏、推近、闪白、击退、挤压回弹、爆炸字、墨点飞溅、飘字 */
+  private impact(power: number, label: string) {
+    this.hitT = this.gt; this.hitPower = power;
+    this.hitStop(60 + power * 80);
+    this.shake(0.18 + power * 0.25, 0.22 + power * 0.15);
+    this.punch(0.05 + power * 0.05);
+    this.foeKnock = 0.8 + power * 0.9;
+    this.splash(V(this.foeX - 0.2, this.hitY(), 1.0), 0.8 + power * 0.6);
+    const [x, y] = this.foeAnchor();
+    this.burst(x - 50, y - 20, power > 0.8 ? pick(["砰！", "咚！", "啪！"]) : pick(["啪！", "嘭！"]), power > 0.8 ? 1.15 : 0.85);
+    if (label) this.floatText(x + 30, y - 90, label);
+    sfx("punch");
+  }
+
+  private async finisher(onLand: () => void, label: string) {
+    const close = this.foeX - HERO_X - 2.4;
+    sfx("whoosh");
+    await new Promise<void>(r => this.anim(170, k => { this.heroDX = close * (1 - (1 - k) ** 3); this.heroLift = Math.sin(k * Math.PI) * 0.6; }, r));
+    for (let i = 0; i < 3; i++) {
+      this.anim(110, k => { this.swing = (i % 2 ? 1 : -1) * 1.8 * Math.sin(k * Math.PI); this.heroTilt = (i % 2 ? -0.15 : 0.15) * Math.sin(k * Math.PI); });
+      await this.wait(70);
+      this.impact(0.55 + i * 0.15, "");
+      await this.wait(i === 2 ? 120 : 90);
+    }
+    // 上挑：大闪光、顿帧、慢动作，把怪物挑飞
+    this.anim(200, k => { this.swing = -2.4 * Math.sin(k * Math.PI / 2); this.heroLift = 0.8 * Math.sin(k * Math.PI); });
+    await this.wait(90);
+    this.flash(0.9);
+    this.hitT = this.gt; this.hitPower = 1.3;
+    this.hitStop(200); this.slow(600, 0.3);
+    this.shake(0.6, 0.55); this.punch(0.16);
+    this.splash(V(this.foeX, this.hitY(), 1.0), 1.8);
+    const [x, y] = this.foeAnchor();
+    this.burst(x - 20, y - 60, "打败啦！", 1.5);
+    this.stars(x, y);
+    if (label) this.floatText(x + 30, y - 110, label);
+    sfx("boom");
+    this.launching = true;
+    onLand();
+    this.anim(320, k => { this.heroDX = close * (1 - k); this.swing *= 0.8; this.heroLift = 0; });
   }
 
   private splash(at: THREE.Vector3, power: number) {
-    this.drops.forEach(d => { d.m.visible = true; d.m.scale.set(1, 1, 1); d.m.position.set(at.x - 0.3, at.y + 0.2, at.z); d.v.set((-1.5 + rnd() * 4) * power, (1 + rnd() * 3.5) * power, (rnd() - 0.5) * 3 * power); });
+    this.drops.forEach(d => { d.m.visible = true; d.m.scale.set(1, 1, 1); d.m.position.set(at.x - 0.3, at.y + 0.2, at.z); d.v.set((-1.5 + rnd() * 5) * power, (1 + rnd() * 4) * power, (rnd() - 0.5) * 3 * power); });
   }
 
-  /** 怪物扑到主角面前咬一口，再退回去。onBite 返回 false 表示被竹盾挡住，主角不闪红 */
+  /** 怪物扑到主角面前咬一口，再退回去。onBite 返回 false 表示被竹盾挡住 */
   lunge(onBite: () => boolean) {
     const from = this.foeX;
-    this.anim(700, k => {
-      const p = k < 0.45 ? k / 0.45 : 1 - (k - 0.45) / 0.55;
-      this.foeX = from + (HERO_X + 2.2 - from) * Math.sin(p * Math.PI / 2);
-    }, () => { this.foeX = from; });
-    setTimeout(() => { if (onBite()) this.heroFlash = 1; }, 320);
+    sfx("whoosh");
+    this.anim(300, k => { this.foeX = from + (HERO_X + 2.2 - from) * (k * k); this.foeLift = Math.sin(k * Math.PI) * 0.8; }, () => {
+      const hurt = onBite();
+      const [hx, hy] = this.toStage(HERO_X, 2.6, 0.3);
+      if (hurt) {
+        this.heroFlash = 1; this.hitStop(120); this.shake(0.45, 0.4); this.flash(0.4, "#ff5a48");
+        this.burst(hx + 20, hy - 30, "哎哟！", 0.95, "#ff9a8a");
+        this.anim(320, k => { this.heroDX = -0.7 * Math.sin((1 - k) * Math.PI / 2) * (1 - k); });
+      } else {
+        this.burst(hx + 70, hy, "挡住！", 0.95, "#a6e07a"); this.shake(0.15, 0.2);
+      }
+      this.anim(420, k => { this.foeX = HERO_X + 2.2 + (from - HERO_X - 2.2) * (1 - (1 - k) ** 3); this.foeLift = 0; });
+    });
   }
 
-  /** 怪物被打散 */
+  /** 把怪物挑飞出画面（大招打完后调用） */
   defeat(onDone: () => void) {
-    const hy = this.foeKind ? FOES[this.foeKind].hitY : 1.6;
-    this.splash(V(this.foeX, hy, 0.6), 1.4);
-    this.anim(650, k => { this.foeScale = 1 + k * 0.3; this.foeAlpha = 1 - k; }, () => { this.setMonster(null); onDone(); });
+    this.launching = true;
+    const x0 = this.foeX;
+    this.anim(900, k => {
+      this.foeX = x0 + 9 * k; this.foeLift = 6 * Math.sin(k * Math.PI * 0.75); this.foeSpin = k * 10;
+      this.foeAlpha = k > 0.75 ? 1 - (k - 0.75) / 0.25 : 1;
+    }, () => { this.setMonster(null); onDone(); });
+  }
+
+  // ---------- 效果 ----------
+  private shake(amp: number, sec: number) { if (reduce) return; this.shakeAmp = Math.max(this.shakeAmp, amp); this.shakeLeft = Math.max(this.shakeLeft, sec); }
+  private punch(z: number) { if (!reduce) this.zoom = Math.max(this.zoom, z); }
+  private hitStop(ms: number) { if (!reduce) this.stopUntil = Math.max(this.stopUntil, performance.now() + ms); }
+  private slow(ms: number, scale: number) { if (!reduce) { this.slowUntil = performance.now() + ms; this.slowScale = scale; } }
+  private flash(alpha: number, color = "#ffffff") {
+    this.flashEl.style.transition = "none"; this.flashEl.style.background = color; this.flashEl.style.opacity = String(alpha);
+    void this.flashEl.offsetWidth; this.flashEl.style.transition = "opacity .35s ease-out"; this.flashEl.style.opacity = "0";
+  }
+  /** 漫画式爆炸字 */
+  private burst(x: number, y: number, text: string, size = 1, color = "#ffd23f") {
+    const pts = Array.from({ length: 28 }, (_, i) => { const a = (i / 28) * Math.PI * 2, r = (i % 2 ? 58 : 100) * (0.88 + rnd() * 0.24); return `${(Math.cos(a) * r).toFixed(1)},${(Math.sin(a) * r * 0.78).toFixed(1)}`; }).join(" ");
+    const el = document.createElement("div");
+    el.className = "burst";
+    el.style.left = `${x}px`; el.style.top = `${y}px`;
+    el.style.setProperty("--s", String(size)); el.style.setProperty("--r", `${(rnd() - 0.5) * 30}deg`);
+    el.innerHTML = `<svg viewBox="-115 -95 230 190"><polygon points="${pts}" fill="${color}" stroke="#14121a" stroke-width="7" stroke-linejoin="round"/></svg><b>${text}</b>`;
+    this.fxLayer.append(el);
+    setTimeout(() => el.remove(), 700);
+  }
+  private floatText(x: number, y: number, text: string) {
+    const el = document.createElement("div");
+    el.className = "dmg"; el.textContent = text;
+    el.style.left = `${x}px`; el.style.top = `${y}px`;
+    this.fxLayer.append(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+  private stars(x: number, y: number) {
+    for (let i = 0; i < 10; i++) {
+      const el = document.createElement("i");
+      el.className = "star3d";
+      const a = rnd() * Math.PI * 2, d = 120 + rnd() * 160;
+      el.style.left = `${x}px`; el.style.top = `${y}px`;
+      el.style.setProperty("--dx", `${Math.cos(a) * d}px`); el.style.setProperty("--dy", `${Math.sin(a) * d - 80}px`);
+      this.fxLayer.append(el);
+      setTimeout(() => el.remove(), 900);
+    }
   }
 
   start() {
@@ -533,41 +618,62 @@ export class World {
   stop() { this.running = false; }
 
   private frame(now: number) {
-    const t = now / 1000;
     const dt = Math.min(0.05, Math.max(0, (now - this.last) / 1000)); this.last = now;
-    const sway = reduce ? 0 : Math.sin(t * 0.18);
-    this.camera.position.set(sway * 1.1, 4.1 + (reduce ? 0 : Math.sin(t * 0.13) * 0.15), 16.5);
-    this.camera.lookAt(0, 1.75, 0);
-    if (!reduce) {
-      this.hero.position.y = Math.sin(t * 1.6) * 0.04 + Math.sin(this.cheerK * Math.PI) * 0.25;
-      this.head.rotation.z = Math.sin(t * 1.1) * 0.05 - this.cheerK * 0.12;
-      this.armL.rotation.z = Math.sin(t * 1.6) * 0.05 - this.cheerK * 2.5; this.armL.rotation.x = -this.cheerK * 0.3;
-      this.ctx.mists.forEach(p => { p.position.x = p.userData.x0 + Math.sin(t * 0.08 * p.userData.sp * 3) * 3; });
-    }
-    this.ctx.tick.forEach(f => f(t, dt, 0));
-    this.anims = this.anims.filter(a => { const k = Math.min(1, (now - a.start) / a.dur); a.fn(k); if (k >= 1) { a.done?.(); return false; } return true; });
+    const frozen = now < this.stopUntil;
+    const scale = frozen ? 0 : now < this.slowUntil ? this.slowScale : 1;
+    const gdt = dt * scale;
+    this.gt += gdt;
+    const t = this.gt;
 
-    // 主角被咬：闪一下
-    if (this.heroFlash > 0) { this.heroFlash = Math.max(0, this.heroFlash - dt * 2.5); this.shirtMat.emissive.setHex(this.heroFlash > 0.5 ? 0xb44a36 : 0x000000); this.hero.position.x = HERO_X - Math.sin(this.heroFlash * 20) * 0.08 * this.heroFlash; }
+    // 镜头：慢慢晃 + 震屏 + 推近
+    const sway = reduce ? 0 : Math.sin(t * 0.18);
+    let sx = 0, sy = 0;
+    if (this.shakeLeft > 0) { this.shakeLeft -= dt; const a = this.shakeAmp * Math.min(1, this.shakeLeft * 4); sx = (rnd() - 0.5) * 2 * a; sy = (rnd() - 0.5) * 2 * a * 0.7; if (this.shakeLeft <= 0) this.shakeAmp = 0; }
+    this.zoom *= Math.pow(0.002, dt);
+    this.camera.position.set(sway * 1.1 + sx, 4.1 + (reduce ? 0 : Math.sin(t * 0.13) * 0.15) + sy, 16.5 * (1 - this.zoom));
+    this.camera.lookAt(sx * 0.5, 1.75 + sy * 0.5, 0);
+
+    if (!reduce) this.ctx.mists.forEach(p => { p.position.x = p.userData.x0 + Math.sin(t * 0.08 * p.userData.sp * 3) * 3; });
+    this.ctx.tick.forEach(f => f(t, gdt, 0));
+    const list = this.anims; this.anims = [];
+    const keep = list.filter(a => { const k = Math.min(1, (t - a.start) / a.dur); a.fn(k); if (k >= 1) { a.done?.(); return false; } return true; });
+    this.anims = keep.concat(this.anims);
+
+    // 主角：呼吸、出招挥笔、比剪刀手、被咬闪红
+    const { Body, Head, ArmR, ArmL } = this.node;
+    const breathe = reduce ? 0 : Math.sin(t * 3.2) * 0.02;
+    this.hero.position.set(HERO_X + this.heroDX, (reduce ? 0 : Math.abs(Math.sin(t * 1.6)) * 0.03) + Math.sin(this.cheerK * Math.PI) * 0.35 + this.heroLift, 0.3);
+    this.hero.rotation.z = -this.heroTilt;
+    if (Body) Body.scale.set(1 - breathe * 0.5, 1 + breathe, 1 - breathe * 0.5);
+    if (Head) Head.rotation.z = (reduce ? 0 : Math.sin(t * 1.1) * 0.05) - this.cheerK * 0.12;
+    if (ArmR) ArmR.rotation.z = this.swing;
+    if (ArmL) { ArmL.rotation.z = (reduce ? 0 : Math.sin(t * 1.6) * 0.05) - this.cheerK * 2.6; ArmL.rotation.x = -this.cheerK * 0.3; }
+    if (this.heroFlash > 0) { this.heroFlash = Math.max(0, this.heroFlash - dt * 2.5); this.heroMats.shirt?.emissive.setHex(this.heroFlash > 0.4 ? 0xd2402e : 0x000000); }
+    this.heroShadow.position.x = HERO_X + this.heroDX; this.heroShadow.scale.setScalar(Math.max(0.5, 1 - this.heroLift * 0.4));
 
     if (this.foeGroup && this.foe) {
-      const hitK = this.hitAt > 0 ? Math.max(0, 1 - (now - this.hitAt) / 700) : 0;
-      this.foe.update(t, dt, hitK);
-      this.foeX += (this.foeXTarget - this.foeX) * Math.min(1, dt * 3);
-      const squash = hitK > 0 ? Math.sin((1 - hitK) * Math.PI * 3) * hitK * 0.22 : 0;
+      const hk = this.hitT >= 0 ? Math.max(0, 1 - (t - this.hitT) / 0.6) : 0;
+      this.foe.update(t, gdt, hk);
+      if (!this.launching) this.foeX += (this.foeXTarget - this.foeX) * Math.min(1, gdt * 3);
+      this.foeKnock *= Math.pow(0.02, gdt);
+      const squash = hk > 0 ? Math.sin((1 - hk) * Math.PI * 3) * hk * (0.18 + this.hitPower * 0.15) : 0;
       this.foeGroup.scale.set((1 + squash) * this.foeScale, (1 - squash) * this.foeScale, (1 + squash) * this.foeScale);
-      this.foeGroup.position.set(this.foeX + hitK * 0.5, (!reduce && this.foeKind !== "kite" && this.foeKind !== "lantern") ? Math.sin(t * 1.3) * 0.05 : 0, 0.4);
-      this.foe.mats.forEach(m => m.emissive.setHex(hitK > 0.75 ? 0xf3ead8 : 0x000000));
+      const bob = (!reduce && this.foeKind !== "kite" && this.foeKind !== "lantern") ? Math.sin(t * 1.3) * 0.05 : 0;
+      this.foeGroup.position.set(this.foeX + this.foeKnock, bob + this.foeLift, 0.4);
+      this.foeGroup.rotation.z = -this.foeSpin;
+      this.foe.mats.forEach(m => m.emissive.setHex(hk > 0.72 ? 0xffffff : 0x000000));
       const blink = (t % 4.2) < 0.12 ? 0.1 : 1; this.foe.eyes.forEach(e => { e.scale.y = blink; });
       if (this.foeAlpha < 1) this.foeGroup.traverse(o => { const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m) { m.transparent = true; m.opacity = this.foeAlpha; } });
-      this.foeShadow.position.x = this.foeX;
+      this.foeShadow.position.x = this.foeX + this.foeKnock; this.foeShadow.visible = this.foeLift < 2;
     }
-    this.drops.forEach(d => { if (!d.m.visible) return; d.v.y -= 9 * dt; d.m.position.addScaledVector(d.v, dt); if (d.m.position.y < 0.05) { d.m.position.y = 0.04; d.v.set(0, 0, 0); d.m.scale.y = 0.25; } });
+    this.drops.forEach(d => { if (!d.m.visible) return; d.v.y -= 9 * gdt; d.m.position.addScaledVector(d.v, gdt); if (d.m.position.y < 0.05) { d.m.position.y = 0.04; d.v.set(0, 0, 0); d.m.scale.y = 0.25; } });
     this.renderer.render(this.scene, this.camera);
   }
 
   clearDrops() { this.drops.forEach(d => { d.m.visible = false; }); }
 }
+
+function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function disposeTree(g: THREE.Object3D) {
   g.traverse(o => {

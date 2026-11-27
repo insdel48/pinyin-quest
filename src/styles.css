@@ -270,3 +270,44 @@ svg { display: block; }
 .howto { left: 0; right: 0; top: 600px; margin: 0 auto; width: max-content; }
 .fresh { top: 690px; }
 .items .it.glow { animation: glow 1s ease-in-out infinite; border-color: var(--red); }
+
+/* 打击特效：爆炸字、伤害字、闪屏、星星 */
+.fx3d { left: 0; top: 0; width: 1280px; height: 800px; pointer-events: none; z-index: 4; }
+.flash3d { inset: 0; pointer-events: none; opacity: 0; z-index: 4; }
+.burst { position: absolute; width: 230px; height: 190px; margin: -95px 0 0 -115px; display: grid; place-items: center; transform: rotate(var(--r)) scale(calc(var(--s) * .2)); animation: burst .6s cubic-bezier(.2,1.6,.4,1) forwards; }
+.burst svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.burst b { position: relative; font-family: "Noto Sans SC", "PingFang SC", sans-serif; font-weight: 900; font-size: 50px; color: #fff; -webkit-text-stroke: 9px #14121a; paint-order: stroke fill; letter-spacing: .02em; }
+@keyframes burst { 0% { transform: rotate(var(--r)) scale(calc(var(--s) * .2)); } 30% { transform: rotate(var(--r)) scale(calc(var(--s) * 1.12)); opacity: 1; } 75% { transform: rotate(var(--r)) scale(var(--s)); opacity: 1; } 100% { transform: rotate(var(--r)) scale(var(--s)); opacity: 0; } }
+.dmg { position: absolute; transform: translate(-50%, 0); font-family: var(--f-py); font-weight: 700; font-size: 58px; color: #fff; -webkit-text-stroke: 10px #d23b2a; paint-order: stroke fill; animation: dmg 1.2s ease-out forwards; white-space: nowrap; }
+@keyframes dmg { 0% { transform: translate(-50%, 20px) scale(.5); opacity: 0; } 15% { transform: translate(-50%, 0) scale(1.25); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(-50%, -90px) scale(1); opacity: 0; } }
+.star3d { position: absolute; width: 30px; height: 30px; margin: -15px; background: #ffd23f; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); animation: star3d .9s ease-out forwards; }
+@keyframes star3d { to { transform: translate(var(--dx), var(--dy)) rotate(260deg) scale(.4); opacity: 0; } }
+
+/* 冒险故事 */
+.chapters { left: 60px; top: 110px; width: 1160px; padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+.chapters h2 { margin: 0; font-size: 40px; text-align: center; }
+.chapter-row { display: flex; gap: 16px; justify-content: center; }
+.chapter { width: 206px; height: 300px; border: 3px solid var(--ink); border-radius: 18px; background: #fff7e0; box-shadow: 6px 8px 0 #2b2a2633; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 12px; position: relative; }
+.chapter:nth-child(1) { background: #ffe9a8; } .chapter:nth-child(2) { background: #c9f0b4; } .chapter:nth-child(3) { background: #b8ecf2; } .chapter:nth-child(4) { background: #f6c6e6; } .chapter:nth-child(5) { background: #ffcf9f; }
+.chapter .no { font-size: 22px; color: #2b2a26aa; }
+.chapter b { font-size: 34px; line-height: 1.2; text-align: center; }
+.chapter .foes { display: flex; gap: 6px; align-items: end; }
+.chapter .foes i { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); display: block; }
+.chapter .foes i.boss { width: 34px; height: 34px; background: var(--red); }
+.chapter .ok { position: absolute; top: 10px; right: 12px; width: 40px; color: var(--gold); }
+.chapter.locked { filter: grayscale(1); opacity: .5; }
+.chapter:not(.locked) { animation: float 2.6s ease-in-out infinite; }
+.chapter:nth-child(2n) { animation-delay: -1.3s; }
+.narration { left: 190px; top: 130px; width: 900px; padding: 30px 40px; display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center; }
+.narration h2 { margin: 0; font-size: 40px; }
+.narration p { margin: 0; font-size: 30px; line-height: 1.7; max-height: 380px; overflow-y: auto; }
+.foe-card { left: 0; right: 0; top: 130px; margin: 0 auto; width: max-content; max-width: 900px; padding: 16px 34px; background: #fff7e0; border: 4px solid var(--ink); border-radius: 18px; box-shadow: 8px 10px 0 #2b2a2640; text-align: center; transform: rotate(-2deg); animation: pop .4s ease-out; }
+.foe-card .title { display: inline-block; background: var(--ink); color: #fff; padding: 2px 16px; border-radius: 999px; font-size: 22px; }
+.foe-card.boss .title { background: var(--red); }
+.foe-card b { display: block; font-size: 46px; margin: 6px 0; }
+.foe-card p { margin: 0; font-size: 28px; }
+.strip.sentence .inner { gap: 2px; padding: 6px 14px 8px; align-items: end; }
+.strip.sentence .ch.plain { width: 40px; }
+.strip.sentence .ch.plain .h { font-size: 34px; line-height: 50px; color: #2b2a26cc; }
+.strip.sentence .ch.tgt { width: 72px; }
+.strip.sentence .ch.tgt .h { font-size: 46px; }

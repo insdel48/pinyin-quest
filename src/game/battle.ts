@@ -1,6 +1,6 @@
 // 一场战斗：放卡拼音、划声调、出招。一只怪物一道题；首领有好几道题。
 import { classifyTone } from "../core/gesture";
-import { compose, itemSyllables, makeCards } from "../core/pinyin";
+import { analyze, compose, itemSyllables, makeCards } from "../core/pinyin";
 import { battleMonsters, pickQuestion, recordAnswer, type AnswerResult } from "../core/progress";
 import { bossQuestions, monsterDistance, onAnswer, startBattle, useHint } from "../core/run";
 import type { HintId, Item, MonsterKind, Syllable, Tone } from "../core/types";
@@ -10,6 +10,26 @@ import { picSvg } from "./pics";
 import { h, HINT_INFO, ICON, mouthSvg, TONE_PATH } from "./ui";
 
 type Kind = "battle" | "elite" | "boss";
+
+/** 一道题：一个字、一个词、一个成语，或者一句长句子里的几个重点字 */
+export interface Question {
+  id: string; // 记录对错用
+  voice: string; // 整题读音
+  chars: string[]; // 显示的字（长句子含标点）
+  targets: number[]; // 要拼的字在 chars 里的位置
+  syls: Syllable[]; // 每个要拼的字的音节
+  pic?: string;
+  sentence: boolean;
+}
+export function itemQuestion(item: Item): Question {
+  const chars = [...item.hanzi];
+  return { id: item.id, voice: "i:" + item.id, chars, targets: chars.map((_, i) => i), syls: itemSyllables(item), pic: item.pic, sentence: false };
+}
+export function sentenceQuestion(id: string, text: string, targets: number[], pinyin: string[]): Question {
+  return { id, voice: "t:" + id, chars: [...text], targets, syls: pinyin.map(analyze), sentence: true };
+}
+/** 冒险故事里的一个敌人：用哪种怪物模型，出哪几道题 */
+export interface StoryFoe { kind: MonsterKind; questions: Question[] }
 type Phase = "intro" | "spell" | "tone" | "busy" | "done";
 type Card = { text: string; used: boolean; gone: boolean; el: HTMLDivElement };
 
@@ -31,9 +51,9 @@ export class Battle {
   private extras: Element[] = [];
 
   private monsters: MonsterKind[] = [];
-  private bossQueue: { item: Item; weak: boolean }[] = [];
+  private bossQueue: { q: Question; weak: boolean }[] = [];
   private bossHpNow = 0; private bossHpMax = 0;
-  private item!: Item; private weak = false;
+  private q!: Question; private weak = false;
   private syls: Syllable[] = []; private si = 0;
   private slots: (string | null)[] = [];
   private cards: Card[] = [];
@@ -47,7 +67,7 @@ export class Battle {
   private alive = true;
   private tutorial: boolean;
 
-  constructor(private g: Game, private kind: Kind, private onEnd: () => void) {
+  constructor(private g: Game, private kind: Kind, private onEnd: () => void, private story: StoryFoe | null = null) {
     // 跳过了新手关的孩子，第一道题还是给最基本的手指提示
     this.tutorial = !g.tips.tutorial && g.profile.runsCompleted === 0 && Object.keys(g.profile.items).length < 2;
     this.strip.append(this.stripInner);
@@ -67,8 +87,14 @@ export class Battle {
   private async start() {
     const { run, profile } = this.g;
     startBattle(run);
-    if (this.kind === "boss") {
-      this.bossQueue = bossQuestions(run, this.g.items, profile, this.g.rng);
+    if (this.story) {
+      // 冒险故事：一个敌人，几句话打完它
+      this.bossQueue = this.story.questions.map(q => ({ q, weak: false }));
+      this.bossHpMax = this.bossHpNow = this.bossQueue.length;
+      this.monsters = [this.story.kind];
+      this.bossHp.hidden = this.bossHpMax < 2; this.updateBossHp();
+    } else if (this.kind === "boss") {
+      this.bossQueue = bossQuestions(run, this.g.items, profile, this.g.rng).map(b => ({ q: itemQuestion(b.item), weak: b.weak }));
       this.bossHpMax = this.bossHpNow = this.bossQueue.length;
       this.monsters = ["ding"];
       this.bossHp.hidden = false; this.updateBossHp();
@@ -85,10 +111,13 @@ export class Battle {
     this.g.world.setMonster(kind);
     sfx("step");
     await wait(700);
-    if (this.kind === "boss") return this.nextBossQuestion();
+    if (this.queued) return this.nextBossQuestion();
     const item = pickQuestion({ items: this.g.items, profile: this.g.profile, monster: kind, level: this.g.profile.level, rng: this.g.rng, exclude: new Set(this.g.run.usedItems), recycle: this.g.run.recycle, layer: this.g.run.layer });
-    await this.beginItem(item, false);
+    await this.beginItem(itemQuestion(item), false);
   }
+
+  /** 首领和冒险故事的敌人：一只怪物连着出好几道题 */
+  private get queued() { return !!this.story || this.kind === "boss"; }
 
   private async nextBossQuestion() {
     const q = this.bossQueue.shift();
@@ -98,24 +127,30 @@ export class Battle {
       this.g.world.cheer();
       return this.finish();
     }
-    await this.beginItem(q.item, q.weak);
+    await this.beginItem(q.q, q.weak);
   }
 
-  private async beginItem(item: Item, weak: boolean) {
-    this.item = item; this.weak = weak;
-    this.syls = itemSyllables(item); this.si = 0;
+  private targetEls: HTMLElement[] = [];
+  private async beginItem(item: Question, weak: boolean) {
+    this.q = item; this.weak = weak;
+    this.syls = item.syls; this.si = 0;
     this.failed = this.assisted = this.wrongCalled = false;
     this.weakTag.innerHTML = weak ? "<span>大招题！打中掉两格血</span>" : "";
-    this.stripInner.innerHTML = [...item.hanzi].map((c, i) => `<div class="ch ${i === 0 ? "cur" : "todo"}"><span class="p hide"></span><span class="h">${c}</span></div>`).join("");
+    // 注音条：要拼的字放大、上面留拼音格；长句子里其他字小一号
+    this.strip.classList.toggle("sentence", item.sentence);
+    this.stripInner.innerHTML = item.chars.map((c, i) => item.targets.includes(i)
+      ? `<div class="ch tgt ${i === item.targets[0] ? "cur" : "todo"}"><span class="p hide"></span><span class="h">${c}</span></div>`
+      : `<div class="ch plain"><span class="p"></span><span class="h">${c}</span></div>`).join("");
+    this.targetEls = [...this.stripInner.querySelectorAll<HTMLElement>(".ch.tgt")];
     this.seals.innerHTML = this.syls.map(() => "<i></i>").join("");
     const pic = picSvg(item.pic, 68);
     this.bubble.className = "bubble" + (pic ? "" : " nopic");
     this.bubble.setAttribute("aria-label", "再听一遍");
     this.bubble.innerHTML = `<svg class="frame" viewBox="0 0 168 104"><path d="M8 8H140V38L162 50 140 62V96H8Z" fill="#f8f2e3" stroke="#2b2a26" stroke-width="2.4" stroke-linejoin="round"/></svg>${pic ? `<span class="pic">${pic}</span>` : ""}<span class="spk">${ICON.speaker}</span>`;
-    preload(["i:" + item.id, ...this.syls.map(s => "s:" + s.written), ...this.syls.flatMap(s => s.parts.map(p => "p:" + p))]);
+    preload([item.voice, ...this.syls.map(s => "s:" + s.written), ...this.syls.flatMap(s => s.parts.map(p => "p:" + p))]);
     this.beginSyllable();
-    await this.talk(() => say("i:" + item.id));
-    if (item.kind !== "char") { await wait(250); await this.sayCurrent(); }
+    await this.talk(() => say(item.voice));
+    if (this.multi) { await wait(250); await this.sayCurrent(); }
     if (this.tutorial && this.si === 0 && this.phase === "spell" && this.slots.every(s => s === null)) { await wait(300); await say("v:spell"); }
     else if (this.phase === "spell") { await wait(400); this.g.teachHint(); }
   }
@@ -136,7 +171,7 @@ export class Battle {
       this.hand.append(el);
       return c;
     });
-    [...this.stripInner.children].forEach((el, i) => {
+    this.targetEls.forEach((el, i) => {
       el.classList.toggle("cur", i === this.si); el.classList.toggle("todo", i > this.si);
       if (i === this.si && this.si > 0) { el.classList.remove("bounce"); void (el as HTMLElement).offsetWidth; el.classList.add("bounce"); }
     });
@@ -149,12 +184,16 @@ export class Battle {
   /** 读当前这个音（词语里逐字读；没有单字读音就读整个词） */
   private sayCurrent(rate = 1) {
     const syl = this.syls[this.si];
-    return this.talk(() => hasVoice("s:" + syl.written) ? say("s:" + syl.written, rate) : say("i:" + this.item.id, rate));
+    return this.talk(() => hasVoice("s:" + syl.written) ? say("s:" + syl.written, rate) : say(this.q.voice, rate));
   }
 
   private replay() {
-    if (this.phase === "intro" || this.phase === "done" || !this.item) return;
-    void this.talk(async () => { await say("i:" + this.item.id); if (this.item.kind !== "char") { await wait(200); await this.sayCurrent(); } });
+    if (this.phase === "intro" || this.phase === "done" || !this.q) return;
+    void this.talk(async () => { await say(this.q.voice); if (this.multi) { await wait(200); await this.sayCurrent(); } });
+  }
+
+  /** 不止一个字要拼（词语、成语、长句子）：整题读完再单读当前这个字 */
+  private get multi() { return this.q.chars.length > 1;
   }
 
   private async talk(fn: () => Promise<void>) {
@@ -406,8 +445,8 @@ export class Battle {
       let hurt = false;
       if (!this.wrongCalled) {
         this.wrongCalled = true; this.failed = true;
-        const r = onAnswer(this.g.run, this.item.id, "wrong", this.g.rng);
-        recordAnswer(this.g.profile, this.item.id, "wrong", this.g.run.runNo);
+        const r = onAnswer(this.g.run, this.q.id, "wrong", this.g.rng);
+        recordAnswer(this.g.profile, this.q.id, "wrong", this.g.run.runNo);
         this.g.hud.update(r.heartLost);
         this.g.save();
         hurt = r.heartLost; blocked = !r.heartLost && this.g.run.boons.includes("shield");
@@ -447,18 +486,19 @@ export class Battle {
   private async hit() {
     if (!this.alive) return;
     const syl = this.syls[this.si];
+    // 一个音打一下；整题最后一个音出大招（冲上去连打再挑飞）
+    const last = this.si === this.syls.length - 1;
     await new Promise<void>(res => this.g.world.attack(true, () => {
-      sfx("hit"); sfx("seal");
+      sfx("seal");
       this.seals.children[this.si]?.classList.add("broken");
-      const p = this.stripInner.children[this.si]?.querySelector(".p");
+      const p = this.targetEls[this.si]?.querySelector(".p");
       if (p) { p.classList.remove("hide"); p.textContent = syl.written; p.classList.add("reveal"); }
-      this.echo(syl.written, false);
       res();
-    }));
+    }, last && (!this.queued || this.bossHpNow <= (this.weak && !this.failed && !this.assisted ? 2 : 1)) ? "finisher" : last ? "heavy" : "light", syl.written));
     void this.sayCurrent();
     await wait(1000);
     this.si++;
-    if (this.si < this.syls.length) { this.beginSyllable(); if (this.item.kind !== "char") await this.sayCurrent(); return; }
+    if (this.si < this.syls.length) { this.beginSyllable(); if (this.multi) await this.sayCurrent(); return; }
     await this.finishItem();
   }
 
@@ -466,16 +506,16 @@ export class Battle {
     const { run, profile } = this.g;
     const result: AnswerResult = this.failed ? "wrong" : this.assisted ? "assisted" : "correct";
     if (!this.wrongCalled) {
-      const r = onAnswer(run, this.item.id, result, this.g.rng);
-      recordAnswer(profile, this.item.id, result, run.runNo);
+      const r = onAnswer(run, this.q.id, result, this.g.rng);
+      recordAnswer(profile, this.q.id, result, run.runNo);
       if (r.stars > 0) this.g.toast(`${ICON.star} +${r.stars}`);
       if (r.hintGained) { const got = r.hintGained; setTimeout(() => { this.g.toast(`连对啦！送你 ${HINT_INFO[got].icon} ${HINT_INFO[got].name}`); void say("v:streak"); }, 700); }
       this.g.hud.update(false, r.hintGained);
     }
     this.g.save();
-    if (this.item.kind !== "char") { await wait(300); await say("i:" + this.item.id); }
+    if (this.multi) { await wait(300); await say(this.q.voice); }
     await wait(400);
-    if (this.kind === "boss") {
+    if (this.queued) {
       this.bossHpNow -= this.weak && result === "correct" ? 2 : 1;
       this.updateBossHp();
       return this.nextBossQuestion();

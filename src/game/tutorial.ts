@@ -121,7 +121,7 @@ export class Tutorial {
     if (!this.alive) return;
     void ok;
     this.renderSlots(["m", "āo"], { 0: "ok", 1: "toned" });
-    await new Promise<void>(res => w.attack(true, () => { sfx("hit"); sfx("seal"); res(); }));
+    await new Promise<void>(res => w.attack(true, () => { sfx("seal"); res(); }, "finisher", "māo"));
     const p = this.stripInner.querySelector(".p"); if (p) { p.classList.remove("hide"); p.textContent = "māo"; p.classList.add("reveal"); }
     await say("s:māo");
     await new Promise<void>(res => w.defeat(res));

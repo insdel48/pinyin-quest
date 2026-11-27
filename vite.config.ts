@@ -4,6 +4,8 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   base: "/pinyin-quest/",
   build: { target: "es2022", chunkSizeWarningLimit: 1200 },
+  // 本机生成读音、模型时不要让预览页面一直刷新
+  server: { watch: { ignored: ["**/public/audio/**", "**/tools/**", "**/src/data/audio.json"] } },
   test: { include: ["src/**/*.test.ts"] },
   plugins: [
     VitePWA({
