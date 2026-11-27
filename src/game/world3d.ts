@@ -185,7 +185,7 @@ export class World {
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; this.scene.add(ground);
 
     this.scene.add(this.hero);
-    this.hero.position.set(HERO_X, 0, HERO_Z); this.hero.rotation.y = -0.45; // 模型面朝 +X，再稍微转向镜头
+    this.hero.position.set(HERO_X, 0, HERO_Z); this.hero.rotation.y = -0.2; // 模型面朝 +X，侧身对着神兽、脸稍微转向镜头
     this.scene.add(this.bracerLight, this.hitLight);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.75, 48), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     this.scene.add(this.ring);
