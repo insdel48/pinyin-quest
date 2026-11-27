@@ -15,7 +15,7 @@ import type { MonsterKind, OutfitId, SceneId } from "../core/types";
 
 export const STAGE_W = 1280, STAGE_H = 800;
 export const SCENE_IDS: SceneId[] = ["c1", "c2", "c3", "c4", "c5"];
-const HERO_X = -1.45, HERO_Z = 0.4, FOE_X = 1.55, FOE_Z = -1.2;
+const HERO_X = -1.45, HERO_Z = 0.4, FOE_X = 1.75, FOE_Z = -1.8;
 const BASE = import.meta.env.BASE_URL;
 const CAM = new THREE.Vector3(0, 1.3, 6.6), LOOK = new THREE.Vector3(0, 1.25, 0);
 const GOLD = 0xffc15a, MIST = 0x9a5cff;
@@ -183,7 +183,7 @@ export class World {
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; this.scene.add(ground);
 
     this.scene.add(this.hero);
-    this.hero.position.set(HERO_X, 0, HERO_Z); this.hero.rotation.y = 0.35; // 模型面朝 +X，再稍微转向镜头
+    this.hero.position.set(HERO_X, 0, HERO_Z); this.hero.rotation.y = -0.45; // 模型面朝 +X，再稍微转向镜头
     this.scene.add(this.bracerLight, this.hitLight);
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.75, 48), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     this.scene.add(this.ring);
@@ -254,7 +254,7 @@ export class World {
       const armor: THREE.Object3D[] = [];
       for (let i = 1; i <= 12; i++) { const a = root.getObjectByName(`Armor${i}`); if (a) armor.push(a); }
       const holder = new THREE.Group(); holder.add(root);
-      holder.rotation.y = -0.25; // 模型面朝 -X，再稍微转向镜头
+      holder.rotation.y = 0.5; // 模型面朝 -X，再稍微转向镜头
       const foe: Foe = { actor: new Actor(root, g.animations), root: holder, armor, glow: glowMats(root), mats, core: root.getObjectByName("Core") ?? null, top: box.max.y, hitY: (box.min.y + box.max.y) * 0.55 };
       this.foe = foe;
       this.scene.add(holder);
@@ -368,7 +368,7 @@ export class World {
     this.shockwave(at, 0.8 + power * 0.8);
     this.sparks(at, Math.round(18 + power * 22), 0.8 + power * 0.8);
     this.mist(at, 8, 0.8);
-    this.hitLight.position.copy(at).add(V(-0.4, 0.2, 0.8)); this.hitLight.intensity = 30 + power * 40;
+    this.hitLight.position.copy(at).add(V(-0.4, 0.2, 0.8)); this.hitLight.intensity = 6 + power * 10;
     const [x, y] = this.toStage(at.x, at.y, at.z);
     if (label) this.floatText(x - 20, y - 110, label);
     sfx("punch");
@@ -397,7 +397,7 @@ export class World {
     this.shake(0.3, 0.55); this.punchZoom(0.1);
     this.shockwave(at, 2.6); this.shockwave(at, 1.6);
     this.sparks(at, 70, 2.2);
-    this.hitLight.position.copy(at).add(V(-0.4, 0.2, 0.8)); this.hitLight.intensity = 120;
+    this.hitLight.position.copy(at).add(V(-0.4, 0.2, 0.8)); this.hitLight.intensity = 30;
     this.foeKnock = 0.9;
     this.foe?.actor.play("Hit", 0.05);
     this.setDamage(1);
