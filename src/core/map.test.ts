@@ -20,7 +20,7 @@ it("跨种子检查房间、连线、可达性和场景", () => {
     expect(layers[7][0]).toMatchObject({ type: "boss", lane: 1, next: [] });
     expect(layers.flat().filter((node) => node.type === "elite").length).toBeLessThanOrEqual(2);
     expect(layers.flat().some((node) => node.type === "chest")).toBe(true);
-    expect(scenes).toEqual([scenes[0], scenes[0], scenes[0], scenes[0], scenes[4], scenes[4], scenes[4], "denghui"]);
+    expect(scenes).toEqual([scenes[0], scenes[0], scenes[0], scenes[0], scenes[4], scenes[4], scenes[4], "c5"]);
     expect(scenes[0]).not.toBe(scenes[4]);
 
     let reachable = new Set(["L1-1"]);

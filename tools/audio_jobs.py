@@ -80,16 +80,33 @@ VOICE_LINES = {
     "statue": "石像说话啦，点对的拼音", "pairs": "左边点一个，右边点一个", "camp": "歇一歇，还是练一练",
     "win": "闯关成功，声音都救回来啦", "lose": "这一局到这里，星星都带回家了",
     # 新手关
-    "t-hello": "墨团偷走了声音，我们一起把它救回来", "t-listen": "点一点喇叭，听一听",
+    "t-hello": "捣蛋怪偷走了声音，我们一起把它救回来", "t-listen": "点一点喇叭，听一听",
     "t-spell": "跟着手指，把卡片放进格子里", "t-tones": "每个字都有声调，我们来学四种声调",
     "t-tone1": "第一声，平平的，横着划", "t-tone2": "第二声，往上扬，往上划",
     "t-tone3": "第三声，先往下，再往上", "t-tone4": "第四声，往下落，往下划",
     "t-neutral": "有的字读得又轻又短，叫轻声，轻轻点一下", "t-try": "你来划一划", "t-good": "划对啦，真棒",
-    "t-back": "猫是第一声，划出来，打败墨团", "t-done": "学会啦，出发去救声音吧", "t-hint": "卡住了，就点这里用道具",
+    "t-back": "猫是第一声，划出来，打败捣蛋怪", "t-done": "学会啦，出发去救声音吧", "t-hint": "卡住了，就点这里用道具",
 }
 for name, text in VOICE_LINES.items():
     # 提示语不考读音，听写和原句大致一样（七成五以上）就行（“啦”常被听成“了”）
     jobs.append({"key": "v:" + name, "mode": "plain", "cands": [text], "expect": None, "similar": text})
+
+# 冒险故事：整句朗读、旁白、口头禅（大致听对就行），以及重点字里还没有读音的单字
+story = json.loads((ROOT / "src/data/story.json").read_text(encoding="utf-8"))
+have = {j["key"] for j in jobs}
+for c in story["chapters"]:
+    for k in ("intro", "outro"):
+        jobs.append({"key": f"n:{c['id']}-{k}", "mode": "plain", "cands": [c[k]], "expect": None, "similar": c[k]})
+    for e in c["enemies"]:
+        jobs.append({"key": f"n:{e['id']}-says", "mode": "plain", "cands": [e["says"]], "expect": None, "similar": e["says"]})
+        for i, sen in enumerate(e["sentences"]):
+            jobs.append({"key": f"t:{e['id']}-{i}", "mode": "plain", "cands": [sen["text"]], "expect": None, "similar": sen["text"]})
+            for t, syl in zip(sen["targets"], sen["pinyin"]):
+                ch = sen["text"][t]
+                if "s:" + syl in have:
+                    continue
+                have.add("s:" + syl)
+                jobs.append({"key": "s:" + syl, "mode": "carrier", "cands": [ch], "expect": [syl]})
 
 for j in jobs:
     j["file"] = fname(j.get("alias") or j["key"])

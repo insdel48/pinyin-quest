@@ -3,11 +3,17 @@ import manifest from "../data/audio.json";
 
 const files = manifest as Record<string, string>;
 let ctx: AudioContext | null = null;
+let master: DynamicsCompressorNode | null = null; // 音效叠在一起时压一压，不爆音
 const buffers = new Map<string, Promise<AudioBuffer | null>>();
 let current: AudioBufferSourceNode | null = null;
 
 export function unlockAudio() {
-  if (!ctx) ctx = new AudioContext();
+  if (!ctx) {
+    ctx = new AudioContext();
+    master = ctx.createDynamicsCompressor();
+    master.threshold.value = -14; master.ratio.value = 6;
+    master.connect(ctx.destination);
+  }
   if (ctx.state === "suspended") void ctx.resume();
 }
 
@@ -52,21 +58,21 @@ export async function sayAll(keys: string[], gap = 180) {
 export const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 /** 音效：全部现场合成，不占音频文件 */
-export function sfx(name: "snap" | "back" | "swish" | "hit" | "miss" | "bite" | "seal" | "chime" | "coin" | "step" | "nope") {
+export function sfx(name: "snap" | "back" | "swish" | "hit" | "miss" | "bite" | "seal" | "chime" | "coin" | "step" | "nope" | "whoosh" | "punch" | "boom") {
   if (!ctx) return;
   const t = ctx.currentTime, c = ctx;
   const tone = (freq: number, dur: number, type: OscillatorType, vol: number, at = 0, to?: number) => {
     const o = c.createOscillator(), g = c.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, t + at); if (to) o.frequency.exponentialRampToValueAtTime(to, t + at + dur);
     g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(vol, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + dur);
-    o.connect(g).connect(c.destination); o.start(t + at); o.stop(t + at + dur + 0.02);
+    o.connect(g).connect(master ?? c.destination); o.start(t + at); o.stop(t + at + dur + 0.02);
   };
   const noise = (dur: number, vol: number, freq: number, at = 0) => {
     const len = Math.floor(c.sampleRate * dur), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
     const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
     s.buffer = b; f.type = "bandpass"; f.frequency.value = freq; g.gain.value = vol;
-    s.connect(f).connect(g).connect(c.destination); s.start(t + at);
+    s.connect(f).connect(g).connect(master ?? c.destination); s.start(t + at);
   };
   switch (name) {
     case "snap": tone(880, 0.06, "triangle", 0.18); noise(0.04, 0.25, 3000); break;
@@ -80,5 +86,9 @@ export function sfx(name: "snap" | "back" | "swish" | "hit" | "miss" | "bite" | 
     case "coin": tone(1320, 0.12, "triangle", 0.14); tone(1760, 0.2, "triangle", 0.12, 0.08); break;
     case "step": noise(0.1, 0.4, 250); break;
     case "nope": tone(330, 0.12, "triangle", 0.15); tone(262, 0.18, "triangle", 0.15, 0.13); break;
+    // 打击感：挥笔呼啸、重拳（低频冲击 + 爆裂噪声 + 短促高频脆响）、大招爆炸（长低频 + 大噪声 + 回响）
+    case "whoosh": noise(0.22, 0.55, 900); noise(0.18, 0.35, 2400, 0.04); break;
+    case "punch": tone(160, 0.22, "sine", 0.9, 0, 45); tone(90, 0.3, "sine", 0.7, 0.01, 35); noise(0.12, 0.9, 700); noise(0.05, 0.6, 3500); break;
+    case "boom": tone(120, 0.7, "sine", 1.0, 0, 30); tone(60, 0.9, "sine", 0.8, 0.02, 25); noise(0.5, 1.0, 500); noise(0.25, 0.7, 1800, 0.03); tone(880, 0.4, "triangle", 0.12, 0.05, 1320); break;
   }
 }

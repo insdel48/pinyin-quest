@@ -34,7 +34,7 @@ export interface Syllable {
 }
 
 export type MonsterKind = "blob" | "lantern" | "kite" | "lion" | "ding";
-export type SceneId = "shanye" | "zhulin" | "shuixiang" | "hetang" | "xueshan" | "denghui";
+export type SceneId = "c1" | "c2" | "c3" | "c4" | "c5"; // 冒险故事的 5 章场景
 export type NodeType = "battle" | "elite" | "chest" | "event" | "camp" | "boss";
 export type HintId = "slow" | "sweep" | "ghost" | "trace";
 export type BoonId = "shield" | "heal" | "calm" | "wick" | "bag" | "gold";

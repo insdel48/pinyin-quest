@@ -1,20 +1,28 @@
 // 游戏外壳：舞台缩放、存档、顶部状态、各个画面（首页、路线、宝箱、小游戏、火堆、结算、换礼物、声音本）。
 import itemsData from "../data/items.json";
+import storyData from "../data/story.json";
 import { pairsEvent, statueEvent } from "../core/events";
 import { compose } from "../core/pinyin";
 import { buy, loadProfile, saveProfile, SHOP } from "../core/progress";
 import { makeRng, pick, shuffle } from "../core/rng";
 import { campHeal, chestChoices, endBattle, finishRun, moveTo, newRun, takeChoice, type RunState } from "../core/run";
-import type { HintId, Item, MapNode, OutfitId, Profile, Syllable } from "../core/types";
+import type { HintId, Item, MapNode, OutfitId, Profile, SceneId, Syllable } from "../core/types";
 import { hasVoice, say, sfx, unlockAudio, wait } from "./audio";
-import { Battle } from "./battle";
+import { Battle, sentenceQuestion } from "./battle";
 import { Tutorial } from "./tutorial";
 import { picSvg } from "./pics";
 import { BOON_INFO, h, HINT_INFO, ICON, NODE_INFO } from "./ui";
-import { STAGE_H, STAGE_W, World } from "./world3d";
+import { SCENE_IDS, STAGE_H, STAGE_W, World } from "./world3d";
 
 // NODE_KEY：进了还没打完的节点；PATH_KEY：这一局走过的节点；TIPS_KEY：教过的东西（新手关、道具）
-const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips";
+const PROFILE_KEY = "pq-profile", RUN_KEY = "pq-run", NODE_KEY = "pq-node", PATH_KEY = "pq-path", TIPS_KEY = "pq-tips", STORY_KEY = "pq-story";
+
+// 冒险故事（Gemini 写的《响亮岛大冒险》，tools/story.py 整理）
+interface StorySentence { text: string; targets: number[]; pinyin: string[] }
+interface StoryEnemy { id: string; title: string; name: string; boss: boolean; says: string; sentences: StorySentence[] }
+interface StoryChapter { id: string; title: string; intro: string; outro: string; enemies: StoryEnemy[] }
+const STORY = storyData as { hero: string; chapters: StoryChapter[]; ending: string };
+// 还没有专门的 3D 模型前，先借用已有的场景和怪物
 const store = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* 存不了就算了 */ } },
@@ -46,6 +54,7 @@ class Hud {
     this.boons.innerHTML = r.boons.map(b => `<i title="${BOON_INFO[b].name}" class="${b === "shield" && r.shieldUsed ? "used" : ""}">${BOON_INFO[b].icon}</i>`).join("");
     this.route.innerHTML = Array.from({ length: 8 }, (_, i) => `${i ? '<i class="l"></i>' : ""}<i class="n${i + 1 < r.layer ? " done" : i + 1 === r.layer ? " now" : i === 7 ? " boss" : ""}"></i>`).join("");
     this.route.setAttribute("aria-label", `第 ${Math.max(1, r.layer)} 站，共 8 站`);
+    this.route.hidden = this.g.inStory; // 冒险故事里没有路线图
     const need = r.boons.includes("wick") ? 2 : 3;
     this.streak.innerHTML = Array.from({ length: need }, (_, i) => `<i class="${i < r.streak ? "on" : ""}"></i>`).join("");
     this.streak.hidden = r.hints.length >= r.hintCap;
@@ -88,8 +97,7 @@ export class Game {
     this.items = (itemsData as Item[]).filter(i => hasVoice("i:" + i.id)); // 读音没核对通过的题不出、不进声音本
     this.profile = loadProfile(store.get(PROFILE_KEY));
     root.innerHTML = `<div id="vp"><div id="stage"><canvas id="gl" width="${STAGE_W}" height="${STAGE_H}" aria-label="战斗场景"></canvas>
-      <svg class="paper" width="${STAGE_W}" height="${STAGE_H}" aria-hidden="true"><filter id="paperf"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .47  0 0 0 0 .33  0 0 0 .45 0"/></filter><filter id="brush" x="-20%" y="-50%" width="140%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".08" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter><rect width="${STAGE_W}" height="${STAGE_H}" filter="url(#paperf)"/></svg>
-      <div class="vignette"></div><div id="screen"></div></div></div><div class="rotate"><div><svg viewBox="0 0 64 64" width="96" height="96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M10 54c10 6 34 6 44 0M48 50l6 4-4 6"/></svg><p>横过来玩</p></div></div>`;
+      <div id="screen"></div></div></div><div class="rotate"><div><svg viewBox="0 0 64 64" width="96" height="96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M10 54c10 6 34 6 44 0M48 50l6 4-4 6"/></svg><p>横过来玩</p></div></div>`;
     this.stage = root.querySelector("#stage")!;
     this.screen = root.querySelector("#screen")!;
     this.world = new World(root.querySelector("#gl")!);
@@ -126,22 +134,25 @@ export class Game {
   }
 
   private show(...els: HTMLElement[]) { this.battle?.destroy(); this.battle = null; this.tutorial?.destroy(); this.tutorial = null; this.hud.setHint(null); this.screen.replaceChildren(...els); }
-  private setNight() { this.stage.classList.toggle("night", this.world.night); }
   /** 点一下就锁住，防止孩子连点 */
   private once(b: HTMLButtonElement, fn: () => void) { b.addEventListener("click", () => { if (b.dataset.done) return; b.dataset.done = "1"; fn(); }); }
 
   // ---------- 首页 ----------
   home() {
     this.hud.root.hidden = true;
-    this.world.setScene("shanye"); this.world.setMonster(null); this.setNight();
+    this.world.setScene("c1"); this.world.setMonster(null);
     const title = h("div", "home-title", `<h1>拼音闯关</h1><div class="seal">救回被偷走的声音</div>`);
     const saved = store.get(RUN_KEY);
-    const go = h("button", "btn primary", `${ICON.play}<span>${saved ? "继续玩" : "出发"}</span>`);
+    const adv = h("button", "btn primary", `${ICON.play}<span>冒险</span>`);
+    adv.addEventListener("click", () => { void tryFullscreen(); if (!this.tips.tutorial) return this.learn(() => this.chapters()); this.chapters(); });
+    const go = h("button", "btn", `${ICON.play}<span>${saved ? "继续闯关" : "闯关"}</span>`);
     go.addEventListener("click", () => {
       void tryFullscreen();
       if (saved) {
         try {
-          this.run = JSON.parse(saved) as RunState; this.rng = makeRng(this.run.seed + this.run.layer * 7919 + 1);
+          this.run = JSON.parse(saved) as RunState;
+          this.run.map.scenes = this.run.map.scenes.map(s => SCENE_IDS.includes(s) ? s : "c2"); // 旧版存档里的水墨场景
+          this.rng = makeRng(this.run.seed + this.run.layer * 7919 + 1);
           try { this.path = JSON.parse(store.get(PATH_KEY) ?? "[]") as string[]; } catch { this.path = []; }
           this.collectedAtStart = this.profile.collected.length;
           return this.resume();
@@ -150,7 +161,7 @@ export class Game {
       if (!this.tips.tutorial) return this.learn(() => this.startRun());
       this.startRun();
     });
-    const actions = h("div", "home-actions"); actions.append(go);
+    const actions = h("div", "home-actions"); actions.append(adv, go);
     const shop = h("button", "btn", `${ICON.star}<span>换礼物</span>`); shop.addEventListener("click", () => this.shop());
     const book = h("button", "btn", `${BOOK_ICON}<span>声音本</span>`); book.addEventListener("click", () => this.book());
     actions.append(shop, book);
@@ -215,7 +226,7 @@ export class Game {
     store.del(NODE_KEY);
     const run = this.run;
     this.hud.root.hidden = false; this.hud.update();
-    this.world.setScene(run.map.scenes[Math.min(run.layer, 7)]); this.world.setMonster(null); this.setNight();
+    this.world.setScene(run.map.scenes[Math.min(run.layer, 7)]); this.world.setMonster(null);
     const wrap = h("div", "panel mapwrap", `<h2>选下一站，点亮着的</h2>`);
     const grid = h("div", "mapgrid");
     const W = 1088, H = 440;
@@ -257,7 +268,7 @@ export class Game {
 
   private open(n: MapNode) {
     this.hud.root.hidden = false; this.hud.update();
-    this.world.setScene(this.run.map.scenes[n.layer - 1]); this.setNight();
+    this.world.setScene(this.run.map.scenes[n.layer - 1]);
     switch (n.type) {
       case "battle": case "elite": case "boss": return this.fight(n.type);
       case "chest": return this.chest(false);
@@ -279,7 +290,106 @@ export class Game {
     });
   }
 
-  runLost() { this.result(false); }
+  runLost() { if (this.chapter) this.chapterLost(); else this.result(false); }
+
+  // ---------- 冒险故事 ----------
+  private chapter: StoryChapter | null = null;
+  get inStory() { return !!this.chapter; }
+  private storyDone(): string[] { try { return JSON.parse(store.get(STORY_KEY) ?? "[]") as string[]; } catch { return []; } }
+
+  /** 选章节：按顺序解锁 */
+  chapters() {
+    this.chapter = null;
+    this.hud.root.hidden = true;
+    this.world.setScene("c1"); this.world.setMonster(null);
+    const done = new Set(this.storyDone());
+    const panel = h("div", "panel chapters", `<h2>响亮岛大冒险</h2>`);
+    const row = h("div", "chapter-row");
+    STORY.chapters.forEach((c, i) => {
+      const open = i === 0 || done.has(STORY.chapters[i - 1].id);
+      const b = h("button", "chapter" + (open ? "" : " locked") + (done.has(c.id) ? " done" : ""), `<span class="pic" style="background-image:url(${import.meta.env.BASE_URL}bg/${c.id}.jpg)"></span><span class="no">第 ${i + 1} 章</span><b>${c.title}</b><span class="foes">${c.enemies.map(e => `<i title="${e.name}" class="${e.boss ? "boss" : ""}"></i>`).join("")}</span>${done.has(c.id) ? `<span class="ok">${ICON.star}</span>` : ""}`);
+      if (open) this.once(b, () => this.playChapter(c)); else b.disabled = true;
+      row.append(b);
+    });
+    panel.append(row);
+    const back = h("button", "btn small back", `${ICON.back}<span>回去</span>`); back.addEventListener("click", () => this.home());
+    this.show(back, panel);
+  }
+
+  private async playChapter(c: StoryChapter) {
+    this.chapter = c;
+    const seed = (Date.now() % 2147483646) + 1;
+    this.run = newRun(this.profile, seed); this.rng = makeRng(seed + 31);
+    this.collectedAtStart = this.profile.collected.length;
+    this.world.setScene(c.id as SceneId);
+    await this.narrate(c.title, c.intro, `n:${c.id}-intro`);
+    for (const e of c.enemies) {
+      if (this.chapter !== c) return;
+      await this.enemyIntro(e);
+      const won = await this.storyFight(e);
+      if (!won) return;
+    }
+    const done = new Set(this.storyDone()); done.add(c.id); store.set(STORY_KEY, JSON.stringify([...done]));
+    finishRun(this.profile, this.run); this.save();
+    this.world.cheer();
+    await this.narrate(c.title, c.outro, `n:${c.id}-outro`, `${ICON.star}+${this.run.stars}`);
+    if (c === STORY.chapters[STORY.chapters.length - 1]) await this.narrate("大结局", STORY.ending, "");
+    this.chapters();
+  }
+
+  /** 旁白：一段话配朗读，点“继续”往下走 */
+  private narrate(title: string, text: string, voice: string, extra = ""): Promise<void> {
+    return new Promise(resolve => {
+      this.hud.root.hidden = true;
+      this.world.setMonster(null);
+      const card = h("div", "panel narration", `<h2>${title}</h2>${extra ? `<div class="bigstars">${extra}</div>` : ""}<p>${text.replace(/\n/g, "<br>")}</p>`);
+      const row = h("div", "row");
+      if (voice && hasVoice(voice)) { const again = h("button", "btn small", `${ICON.speaker}<span>再听一遍</span>`); again.addEventListener("click", () => void say(voice)); row.append(again); }
+      const next = h("button", "btn primary", `${ICON.play}<span>继续</span>`); this.once(next, () => resolve());
+      row.append(next); card.append(row);
+      this.show(card);
+      if (voice) void say(voice);
+    });
+  }
+
+  /** 敌人登场：名字、口头禅 */
+  private async enemyIntro(e: StoryEnemy) {
+    this.hud.root.hidden = false; this.hud.update();
+    this.world.setMonster(e.id);
+    const card = h("div", "foe-card" + (e.boss ? " boss" : ""), `<span class="title">${e.boss ? "关底大怪" : "捣蛋怪出现"}</span><b>${e.title}·${e.name}</b><p>“${e.says}”</p>`);
+    this.show(card);
+    sfx("step");
+    await wait(500);
+    if (hasVoice(`n:${e.id}-says`)) await say(`n:${e.id}-says`); else await wait(1500);
+    await wait(500);
+  }
+
+  private storyFight(e: StoryEnemy): Promise<boolean> {
+    const picks = e.boss ? e.sentences : shuffle(this.rng, e.sentences).slice(0, 2);
+    const questions = picks.map(s => sentenceQuestion(`${e.id}-${e.sentences.indexOf(s)}`, s.text, s.targets, s.pinyin));
+    return new Promise(resolve => {
+      this.show();
+      this.hud.root.hidden = false; this.hud.update();
+      this.storyResolve = resolve;
+      this.battle = new Battle(this, e.boss ? "boss" : "battle", () => { this.battle = null; this.storyResolve = null; endBattle(this.run, e.boss ? "elite" : "battle"); this.hud.update(); this.save(); resolve(true); }, { kind: e.boss ? "ding" : "blob", model: e.id, questions });
+    });
+  }
+  private storyResolve: ((won: boolean) => void) | null = null;
+
+  /** 冒险里心用完了：这一章重来 */
+  private chapterLost() {
+    const c = this.chapter!;
+    this.storyResolve?.(false); this.storyResolve = null;
+    this.hud.root.hidden = true;
+    this.world.setMonster(null);
+    const card = h("div", "panel center-card", `<h2>差一点点！</h2><p>心用完啦，再来一次一定能行</p>`);
+    const row = h("div", "row");
+    const again = h("button", "btn primary", `${ICON.play}<span>这一章再来</span>`); this.once(again, () => void this.playChapter(c));
+    const back = h("button", "btn", `${ICON.home}<span>选章节</span>`); back.addEventListener("click", () => this.chapters());
+    row.append(again, back); card.append(row);
+    this.show(card);
+    void say("v:lose");
+  }
 
   // ---------- 宝箱 ----------
   private chest(elite: boolean) {

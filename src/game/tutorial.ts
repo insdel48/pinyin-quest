@@ -1,4 +1,4 @@
-// 新手关：第一次玩时，手把手教听、拼、四个声调和轻声，最后划出声调打败墨团。
+// 新手关：第一次玩时，手把手教听、拼、四个声调和轻声，最后划出声调打败捣蛋怪。
 import { classifyTone } from "../core/gesture";
 import type { Tone } from "../core/types";
 import { say, sfx, stopVoice, wait } from "./audio";
@@ -51,7 +51,7 @@ export class Tutorial {
 
   private async run() {
     const w = this.g.world;
-    w.setScene("shanye"); w.setMonster("blob"); w.setApproach(2, 2);
+    w.setScene("c1"); w.setMonster("c1e1"); w.setApproach(2, 2);
     this.stripInner.innerHTML = `<div class="ch cur"><span class="p hide"></span><span class="h">猫</span></div>`;
     this.bubble.className = "bubble";
     this.bubble.innerHTML = `<svg class="frame" viewBox="0 0 168 104"><path d="M8 8H140V38L162 50 140 62V96H8Z" fill="#f8f2e3" stroke="#2b2a26" stroke-width="2.4" stroke-linejoin="round"/></svg><span class="pic">${picSvg("cat", 68)}</span><span class="spk">${ICON.speaker}</span>`;
@@ -109,7 +109,7 @@ export class Tutorial {
     this.renderSlots(["ma"], {});
     await this.learnTone(0, "v:t-neutral", "i:w-妈妈", "ma");
 
-    // 4. 出招：回到“猫”，自己划出一声打败墨团
+    // 4. 出招：回到“猫”，自己划出一声打败捣蛋怪
     if (!this.alive) return;
     this.step(3);
     this.bubble.hidden = false;
@@ -121,7 +121,7 @@ export class Tutorial {
     if (!this.alive) return;
     void ok;
     this.renderSlots(["m", "āo"], { 0: "ok", 1: "toned" });
-    await new Promise<void>(res => w.attack(true, () => { sfx("hit"); sfx("seal"); res(); }));
+    await new Promise<void>(res => w.attack(true, () => { sfx("seal"); res(); }, "finisher", "māo"));
     const p = this.stripInner.querySelector(".p"); if (p) { p.classList.remove("hide"); p.textContent = "māo"; p.classList.add("reveal"); }
     await say("s:māo");
     await new Promise<void>(res => w.defeat(res));
